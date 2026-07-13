@@ -32,58 +32,12 @@ export default function Footer() {
           
           {/* Brand details */}
           <div className="lg:col-span-5 space-y-5">
-            <Link href="/" className="flex items-center gap-3">
-              <svg
-                className="w-9 h-9 text-white"
-                viewBox="0 0 100 100"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M50 12 L82 22 V55 C82 76 50 88 50 88 C50 88 18 76 18 55 V22 L50 12 Z"
-                  fill="currentColor"
-                  fillOpacity="0.08"
-                  stroke="currentColor"
-                  strokeWidth="4.5"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M33 38 C30 42 30 48 33 51 M30 49 C27 53 27 59 30 62 M34 60 C31 64 31 70 34 73"
-                  stroke="currentColor"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M67 38 C70 42 70 48 67 51 M70 49 C73 53 73 59 70 62 M66 60 C69 64 69 70 66 73"
-                  stroke="currentColor"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M50 30 L53 38 L61 38 L55 43 L57 51 L50 46 L43 51 L45 43 L39 38 L47 38 Z"
-                  fill="#E67E22"
-                />
-                <path
-                  d="M38 52 C42 50 48 50 50 54 C52 50 58 50 62 52 V66 C58 64 52 64 50 68 C48 64 42 64 38 66 V52 Z"
-                  stroke="currentColor"
-                  strokeWidth="3.5"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-                <path
-                  d="M50 54 V68"
-                  stroke="currentColor"
-                  strokeWidth="3.5"
-                />
-              </svg>
-              <div className="flex flex-col">
-                <span className="font-sans text-xl font-extrabold tracking-wider text-white leading-tight">
-                  IHDECA
-                </span>
-                <span className="text-[8px] uppercase tracking-[0.25em] text-accent font-bold leading-none">
-                  Instituto Académico
-                </span>
-              </div>
+            <Link href="/" className="flex items-center gap-3 group">
+              <img
+                src="/logo.webp"
+                alt="IHDECA Programas"
+                className="h-10 w-auto object-contain brightness-0 invert transition-transform duration-300 group-hover:scale-105"
+              />
             </Link>
             <p className="text-sm text-slate-300 font-sans leading-relaxed max-w-sm">
               Institución enfocada en el desarrollo de programas prácticos y certificaciones especializadas para potenciar la inserción laboral de profesionales modernos.
