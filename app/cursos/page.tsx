@@ -1,19 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Clock, BookOpen, Star, SlidersHorizontal, Eye } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
-import { courses, categories } from "@/app/data/courses";
+import { courses as staticCourses, categories, Course } from "@/app/data/courses";
 
 export default function CursosPage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedModalidad, setSelectedModalidad] = useState("all");
+  const [coursesList, setCoursesList] = useState<Course[]>(staticCourses);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("ihdeca_courses");
+      if (saved) {
+        setCoursesList(JSON.parse(saved));
+      }
+    }
+  }, []);
 
   // Dynamic filter logic
-  const filteredCourses = courses.filter((course) => {
+  const filteredCourses = coursesList.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(search.toLowerCase()) || 
                           course.description.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = selectedCategory === "all" || course.categorySlug === selectedCategory;

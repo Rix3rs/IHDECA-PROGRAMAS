@@ -1,19 +1,27 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Clock, BookOpen, Star, ArrowLeft, Eye } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
-import { courses, categories } from "@/app/data/courses";
+import { courses as staticCourses, categories, Course } from "@/app/data/courses";
 
 export default function CategoryPage() {
   const params = useParams();
   const slug = params.slug as string;
 
   const category = categories.find((c) => c.slug === slug);
-  const categoryCourses = courses.filter((c) => c.categorySlug === slug);
+  const [categoryCourses, setCategoryCourses] = useState<Course[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("ihdeca_courses");
+      const currentCourses: Course[] = saved ? JSON.parse(saved) : staticCourses;
+      setCategoryCourses(currentCourses.filter((c) => c.categorySlug === slug));
+    }
+  }, [slug]);
 
   if (!category) {
     return (

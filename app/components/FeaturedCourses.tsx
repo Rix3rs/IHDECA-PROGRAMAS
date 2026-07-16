@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Clock, BookOpen, Star } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { courses } from "@/app/data/courses";
+import { courses as staticCourses, Course } from "@/app/data/courses";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -14,6 +14,16 @@ if (typeof window !== "undefined") {
 
 export default function FeaturedCourses() {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const [coursesList, setCoursesList] = useState<Course[]>(staticCourses);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("ihdeca_courses");
+      if (saved) {
+        setCoursesList(JSON.parse(saved));
+      }
+    }
+  }, []);
 
   useGSAP(() => {
     gsap.fromTo(".course-card",
@@ -73,7 +83,7 @@ export default function FeaturedCourses() {
 
         {/* Courses Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {courses.map((course) => (
+          {coursesList.map((course) => (
             <div
               key={course.slug}
               className="course-card group flex flex-col nicdark-card overflow-hidden transition-[box-shadow,border-color] duration-300"

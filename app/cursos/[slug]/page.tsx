@@ -6,12 +6,26 @@ import { useParams } from "next/navigation";
 import { Clock, BookOpen, Star, ArrowLeft, Check, CheckCircle2, Send, Loader2, Info } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
-import { courses } from "@/app/data/courses";
+import { courses as staticCourses, Course } from "@/app/data/courses";
 
 export default function CourseDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const course = courses.find((c) => c.slug === slug);
+
+  const [course, setCourse] = useState<Course | undefined>(() => {
+    return staticCourses.find((c) => c.slug === slug);
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("ihdeca_courses");
+      if (saved) {
+        const parsed: Course[] = JSON.parse(saved);
+        const found = parsed.find((c) => c.slug === slug);
+        setCourse(found);
+      }
+    }
+  }, [slug]);
 
   const [form, setForm] = useState({
     nombre: "",
