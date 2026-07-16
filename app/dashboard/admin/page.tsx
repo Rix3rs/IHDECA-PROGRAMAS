@@ -458,13 +458,18 @@ export default function AdminDashboard() {
                       {/* Instructor */}
                       <div className="space-y-1">
                         <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Nombre Docente</label>
-                        <input
-                          type="text"
-                          placeholder="Ej. Dr. Walter"
+                        <select
                           value={newCourse.instructor}
                           onChange={(e) => setNewCourse({ ...newCourse, instructor: e.target.value })}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
-                        />
+                          className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer"
+                        >
+                          <option value="Por confirmar">Por confirmar</option>
+                          {teachers.map((t) => (
+                            <option key={t.id} value={t.nombre}>
+                              {t.nombre}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
 
