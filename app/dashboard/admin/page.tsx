@@ -118,7 +118,7 @@ export default function AdminDashboard() {
               email: userForm.email,
               contrasena: userForm.contrasena,
               cursoSlug: userForm.cursoSlug,
-              cursoTitle
+              cursoTitle: courseTitle
             };
           }
           return st;
@@ -135,7 +135,7 @@ export default function AdminDashboard() {
               email: userForm.email,
               contrasena: userForm.contrasena,
               cursoSlug: userForm.cursoSlug,
-              cursoTitle
+              cursoTitle: courseTitle
             };
           }
           return t;
@@ -144,19 +144,6 @@ export default function AdminDashboard() {
     }
     setIsUserModalOpen(false);
   };
-  const [newCourse, setNewCourse] = useState({
-    title: "",
-    description: "",
-    extendedDescription: "",
-    category: "Liderazgo y Habilidades Blandas",
-    categorySlug: "liderazgo-y-habilidades",
-    duration: "Por confirmar",
-    lessons: "Por definir",
-    instructor: "Por confirmar",
-    price: "Por confirmar",
-    emoji: "🎯",
-    gradient: "from-blue-600 to-indigo-700"
-  });
 
   const handleApprove = (studentId: string) => {
     setStudents(prev => 
@@ -578,6 +565,14 @@ export default function AdminDashboard() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            ) : (
+              <div className="text-center py-16 bg-white border border-slate-200 rounded-[40px_40px_40px_0px] max-w-md mx-auto p-6 font-sans space-y-3">
+                <HelpCircle className="w-12 h-12 text-slate-300 mx-auto" />
+                <h4 className="text-base font-bold text-primary">No hay aprobaciones pendientes</h4>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Todas las solicitudes enviadas desde el portal público de IHDECA ya han sido procesadas con éxito.
+                </p>
               </div>
             )}
           </div>
