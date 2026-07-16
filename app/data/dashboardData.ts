@@ -2,6 +2,7 @@ export interface MockStudent {
   id: string;
   nombre: string;
   email: string;
+  contrasena: string;
   cursoSlug: string;
   cursoTitle: string;
   progreso: number; // 0 to 100
@@ -17,6 +18,7 @@ export interface MockTeacher {
   id: string;
   nombre: string;
   email: string;
+  contrasena: string;
   cursoSlug: string;
   cursoTitle: string;
   zoomLink: string;
@@ -34,6 +36,7 @@ export const initialStudents: MockStudent[] = [
     id: "EST-001",
     nombre: "Alejandro Ruiz",
     email: "alejandro.ruiz@gmail.com",
+    contrasena: "ruiz2026",
     cursoSlug: "liderazgo-empresarial",
     cursoTitle: "Liderazgo empresarial",
     progreso: 65,
@@ -48,6 +51,7 @@ export const initialStudents: MockStudent[] = [
     id: "EST-002",
     nombre: "Mariana Gómez",
     email: "mariana.gomez@hotmail.com",
+    contrasena: "gomez2026",
     cursoSlug: "comunicacion-asertiva",
     cursoTitle: "Comunicación efectiva y asertiva en el trabajo",
     progreso: 90,
@@ -62,6 +66,7 @@ export const initialStudents: MockStudent[] = [
     id: "EST-003",
     nombre: "David Kahan",
     email: "david.kahan@outlook.com",
+    contrasena: "kahan2026",
     cursoSlug: "manejo-de-conflictos",
     cursoTitle: "Manejo de conflictos",
     progreso: 40,
@@ -75,6 +80,7 @@ export const initialStudents: MockStudent[] = [
     id: "EST-004",
     nombre: "Laura Peralta",
     email: "laura.peralta@gmail.com",
+    contrasena: "peralta2026",
     cursoSlug: "liderazgo-empresarial",
     cursoTitle: "Liderazgo empresarial",
     progreso: 10,
@@ -89,6 +95,7 @@ export const initialStudents: MockStudent[] = [
     id: "EST-005",
     nombre: "Roberto Castillo",
     email: "roberto.castillo@yahoo.com",
+    contrasena: "castillo2026",
     cursoSlug: "comunicacion-asertiva",
     cursoTitle: "Comunicación efectiva y asertiva en el trabajo",
     progreso: 0,
@@ -105,6 +112,7 @@ export const initialTeachers: MockTeacher[] = [
     id: "DOC-001",
     nombre: "Walter",
     email: "walter.docente@ihdecaprogramas.com.mx",
+    contrasena: "walter2026",
     cursoSlug: "curso-de-walter",
     cursoTitle: "Curso de Walter",
     zoomLink: "https://zoom.us/j/9876543210"
@@ -113,6 +121,7 @@ export const initialTeachers: MockTeacher[] = [
     id: "DOC-002",
     nombre: "Dra. Sofía Altamirano",
     email: "sofia.altamirano@ihdecaprogramas.com.mx",
+    contrasena: "sofia2026",
     cursoSlug: "liderazgo-empresarial",
     cursoTitle: "Liderazgo empresarial",
     zoomLink: "https://meet.google.com/abc-defg-hij"
@@ -121,6 +130,7 @@ export const initialTeachers: MockTeacher[] = [
     id: "DOC-003",
     nombre: "Mtro. Carlos Mendoza",
     email: "carlos.mendoza@ihdecaprogramas.com.mx",
+    contrasena: "carlos2026",
     cursoSlug: "comunicacion-asertiva",
     cursoTitle: "Comunicación efectiva y asertiva en el trabajo",
     zoomLink: "https://meet.google.com/xyz-uvwx-yza"
@@ -129,6 +139,7 @@ export const initialTeachers: MockTeacher[] = [
     id: "DOC-004",
     nombre: "Mtra. Elena Rossi",
     email: "elena.rossi@ihdecaprogramas.com.mx",
+    contrasena: "elena2026",
     cursoSlug: "manejo-de-conflictos",
     cursoTitle: "Manejo de conflictos",
     zoomLink: "https://zoom.us/j/0123456789"

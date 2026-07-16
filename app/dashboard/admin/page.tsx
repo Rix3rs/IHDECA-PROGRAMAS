@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Check, UserCheck, AlertCircle, X, HelpCircle, FileText, Trash2 } from "lucide-react";
+import { Plus, Check, UserCheck, AlertCircle, X, HelpCircle, FileText, Trash2, Edit2, UserCog } from "lucide-react";
 import Sidebar from "@/app/dashboard/components/Sidebar";
-import { initialStudents, mockAdminMetrics, MockStudent } from "@/app/data/dashboardData";
+import { initialStudents, mockAdminMetrics, MockStudent, initialTeachers, MockTeacher } from "@/app/data/dashboardData";
 import { courses as initialCourses, Course } from "@/app/data/courses";
 
 export default function AdminDashboard() {
   const [activeView, setActiveView] = useState("resumen");
   const [students, setStudents] = useState<MockStudent[]>(initialStudents);
   const [courses, setCourses] = useState<Course[]>(initialCourses);
+  const [teachers, setTeachers] = useState<MockTeacher[]>(initialTeachers);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -21,6 +22,10 @@ export default function AdminDashboard() {
     const savedCourses = localStorage.getItem("ihdeca_courses");
     if (savedCourses) {
       setCourses(JSON.parse(savedCourses));
+    }
+    const savedTeachers = localStorage.getItem("ihdeca_teachers");
+    if (savedTeachers) {
+      setTeachers(JSON.parse(savedTeachers));
     }
   }, []);
 
@@ -37,8 +42,108 @@ export default function AdminDashboard() {
     }
   }, [courses, isMounted]);
 
+  useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem("ihdeca_teachers", JSON.stringify(teachers));
+    }
+  }, [teachers, isMounted]);
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newCourse, setNewCourse] = useState({
+    title: "",
+    description: "",
+    extendedDescription: "",
+    category: "Liderazgo y Habilidades Blandas",
+    categorySlug: "liderazgo-y-habilidades",
+    duration: "Por confirmar",
+    lessons: "Por definir",
+    instructor: "Por confirmar",
+    price: "Por confirmar",
+    emoji: "🎯",
+    gradient: "from-blue-600 to-indigo-700"
+  });
+
+  // User Edit Modal State
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUserType, setEditingUserType] = useState<"student" | "teacher">("student");
+  const [editingUserId, setEditingUserId] = useState("");
+  const [userForm, setUserForm] = useState({
+    nombre: "",
+    email: "",
+    contrasena: "",
+    cursoSlug: ""
+  });
+
+  // Sub-tab toggle in Users Tab
+  const [activeUserSubTab, setActiveUserSubTab] = useState<"student" | "teacher">("student");
+
+  const handleOpenEditUser = (type: "student" | "teacher", id: string) => {
+    setEditingUserType(type);
+    setEditingUserId(id);
+    if (type === "student") {
+      const student = students.find(s => s.id === id);
+      if (student) {
+        setUserForm({
+          nombre: student.nombre,
+          email: student.email,
+          contrasena: student.contrasena,
+          cursoSlug: student.cursoSlug
+        });
+      }
+    } else {
+      const teacher = teachers.find(t => t.id === id);
+      if (teacher) {
+        setUserForm({
+          nombre: teacher.nombre,
+          email: teacher.email,
+          contrasena: teacher.contrasena,
+          cursoSlug: teacher.cursoSlug
+        });
+      }
+    }
+    setIsUserModalOpen(true);
+  };
+
+  const handleSaveUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingUserType === "student") {
+      setStudents(prev => 
+        prev.map(st => {
+          if (st.id === editingUserId) {
+            const courseTitle = courses.find(c => c.slug === userForm.cursoSlug)?.title || st.cursoTitle;
+            return {
+              ...st,
+              nombre: userForm.nombre,
+              email: userForm.email,
+              contrasena: userForm.contrasena,
+              cursoSlug: userForm.cursoSlug,
+              cursoTitle
+            };
+          }
+          return st;
+        })
+      );
+    } else {
+      setTeachers(prev => 
+        prev.map(t => {
+          if (t.id === editingUserId) {
+            const courseTitle = courses.find(c => c.slug === userForm.cursoSlug)?.title || t.cursoTitle;
+            return {
+              ...t,
+              nombre: userForm.nombre,
+              email: userForm.email,
+              contrasena: userForm.contrasena,
+              cursoSlug: userForm.cursoSlug,
+              cursoTitle
+            };
+          }
+          return t;
+        })
+      );
+    }
+    setIsUserModalOpen(false);
+  };
   const [newCourse, setNewCourse] = useState({
     title: "",
     description: "",
@@ -474,15 +579,193 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* VIEW 4: GESTIONAR USUARIOS */}
+        {activeView === "usuarios" && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-4">
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setActiveUserSubTab("student")}
+                  className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                    activeUserSubTab === "student"
+                      ? "bg-primary text-white shadow-sm"
+                      : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
+                  }`}
+                >
+                  Estudiantes / Alumnos
+                </button>
+                <button
+                  onClick={() => setActiveUserSubTab("teacher")}
+                  className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                    activeUserSubTab === "teacher"
+                      ? "bg-primary text-white shadow-sm"
+                      : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
+                  }`}
+                >
+                  Docentes / Profesores
+                </button>
+              </div>
+            </div>
+
+            {activeUserSubTab === "student" ? (
+              <div className="bg-white border border-slate-200 rounded-[24px_24px_24px_0px] overflow-hidden shadow-sm">
+                <table className="w-full text-left font-sans text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 border-b border-slate-200 font-bold uppercase tracking-wider text-[9px]">
+                      <th className="p-4">ID</th>
+                      <th className="p-4">Nombre</th>
+                      <th className="p-4">Correo</th>
+                      <th className="p-4">Contraseña</th>
+                      <th className="p-4">Curso Inscrito</th>
+                      <th className="p-4 text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {students.map((st) => (
+                      <tr key={st.id} className="hover:bg-slate-50/50">
+                        <td className="p-4 font-mono font-bold text-slate-500">{st.id}</td>
+                        <td className="p-4 font-bold text-primary">{st.nombre}</td>
+                        <td className="p-4 text-slate-600 font-semibold">{st.email}</td>
+                        <td className="p-4 font-mono text-slate-800 font-semibold bg-slate-50/50">{st.contrasena}</td>
+                        <td className="p-4 text-slate-500 font-semibold">{st.cursoTitle}</td>
+                        <td className="p-4 text-center">
+                          <button
+                            onClick={() => handleOpenEditUser("student", st.id)}
+                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            aria-label="Editar contraseña/detalles estudiante"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
-              <div className="text-center py-16 bg-white border border-slate-200 rounded-[40px_40px_40px_0px] max-w-md mx-auto p-6 font-sans space-y-3">
-                <HelpCircle className="w-12 h-12 text-slate-300 mx-auto" />
-                <h4 className="text-base font-bold text-primary">No hay aprobaciones pendientes</h4>
-                <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  Todas las solicitudes enviadas desde el portal público de IHDECA ya han sido procesadas con éxito.
-                </p>
+              <div className="bg-white border border-slate-200 rounded-[24px_24px_24px_0px] overflow-hidden shadow-sm">
+                <table className="w-full text-left font-sans text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 border-b border-slate-200 font-bold uppercase tracking-wider text-[9px]">
+                      <th className="p-4">ID</th>
+                      <th className="p-4">Nombre</th>
+                      <th className="p-4">Correo</th>
+                      <th className="p-4">Contraseña</th>
+                      <th className="p-4">Materia Asignada</th>
+                      <th className="p-4 text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {teachers.map((t) => (
+                      <tr key={t.id} className="hover:bg-slate-50/50">
+                        <td className="p-4 font-mono font-bold text-slate-500">{t.id}</td>
+                        <td className="p-4 font-bold text-primary">{t.nombre}</td>
+                        <td className="p-4 text-slate-600 font-semibold">{t.email}</td>
+                        <td className="p-4 font-mono text-slate-800 font-semibold bg-slate-50/50">{t.contrasena}</td>
+                        <td className="p-4 text-slate-500 font-semibold">{t.cursoTitle}</td>
+                        <td className="p-4 text-center">
+                          <button
+                            onClick={() => handleOpenEditUser("teacher", t.id)}
+                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            aria-label="Editar contraseña/detalles docente"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
+          </div>
+        )}
+
+        {/* USER EDIT MODAL */}
+        {isUserModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
+            <div className="bg-white border border-slate-200 w-full max-w-md rounded-[40px_40px_40px_0px] shadow-2xl p-8 relative animate-scale-up font-sans text-xs">
+              <button 
+                onClick={() => setIsUserModalOpen(false)}
+                className="absolute top-6 right-6 text-slate-400 hover:text-primary transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="text-lg font-bold text-primary mb-1">Editar {editingUserType === "student" ? "Estudiante" : "Docente"}</h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-6">ID del usuario: {editingUserId}</p>
+
+              <form onSubmit={handleSaveUser} className="space-y-4">
+                {/* Nombre */}
+                <div className="space-y-1">
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Nombre Completo</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Juan Pérez"
+                    value={userForm.nombre}
+                    onChange={(e) => setUserForm({ ...userForm, nombre: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-1">
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Correo Electrónico</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="Ej. juan@correo.com"
+                    value={userForm.email}
+                    onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+
+                {/* Contraseña */}
+                <div className="space-y-1">
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Contraseña (Modificar / Restablecer)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contraseña del usuario..."
+                    value={userForm.contrasena}
+                    onChange={(e) => setUserForm({ ...userForm, contrasena: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-accent font-mono text-xs font-bold text-slate-800"
+                  />
+                </div>
+
+                {/* Curso Asignado */}
+                <div className="space-y-1">
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                    {editingUserType === "student" ? "Curso Matriculado" : "Materia Asignada"}
+                  </label>
+                  <select
+                    value={userForm.cursoSlug}
+                    onChange={(e) => setUserForm({ ...userForm, cursoSlug: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer"
+                  >
+                    {courses.map((c) => (
+                      <option key={c.slug} value={c.slug}>
+                        {c.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  className="w-full inline-flex items-center justify-center px-4 py-3 bg-accent hover:bg-primary text-white text-xs font-bold uppercase tracking-wider rounded-xl cursor-pointer shadow-md transition-colors mt-2"
+                >
+                  Guardar Cambios
+                </button>
+              </form>
+            </div>
           </div>
         )}
       </main>

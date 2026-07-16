@@ -14,7 +14,8 @@ import {
   Clock, 
   FileText, 
   FolderPlus,
-  ArrowLeft
+  ArrowLeft,
+  UserCog
 } from "lucide-react";
 
 interface SidebarProps {
@@ -52,6 +53,7 @@ export default function Sidebar({ role, activeView, onViewChange, userName, user
       { id: "resumen", label: "Estadísticas", icon: LayoutDashboard },
       { id: "cursos", label: "Gestionar Cursos", icon: FolderPlus },
       { id: "alumnos", label: "Aprobaciones", icon: Clock },
+      { id: "usuarios", label: "Gestionar Usuarios", icon: UserCog },
     ],
     docente: [
       { id: "cursos", label: "Mis Materias", icon: BookOpen },
