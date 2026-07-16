@@ -5,7 +5,6 @@ import Categories from "@/app/components/Categories";
 import WhyUs from "@/app/components/WhyUs";
 import FeaturedCourses from "@/app/components/FeaturedCourses";
 import Stats from "@/app/components/Stats";
-import Testimonials from "@/app/components/Testimonials";
 import CTAForm from "@/app/components/CTAForm";
 import Footer from "@/app/components/Footer";
 
@@ -30,9 +29,6 @@ export default function Home() {
 
         {/* Stats Section */}
         <Stats />
-
-        {/* Testimonials Section */}
-        <Testimonials />
 
         {/* Final CTA Form Section */}
         <CTAForm />

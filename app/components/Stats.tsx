@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
-import { GraduationCap, BookOpen, Clock, Heart } from "lucide-react";
+import { Users, Building2, Clock, Smile } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -19,7 +19,6 @@ interface StatItem {
 const StatNumber = ({ value }: { value: string }) => {
   const spanRef = useRef<HTMLSpanElement>(null);
   
-  // Extract number and surrounding format details (+, %, commas)
   const numericPart = parseInt(value.replace(/[^0-9]/g, ""), 10);
   const isPercent = value.includes("%");
   const isPlusAtStart = value.startsWith("+");
@@ -68,28 +67,27 @@ export default function Stats() {
   const stats: StatItem[] = [
     {
       number: "+5,000",
-      label: "Graduados exitosos",
-      icon: GraduationCap,
+      label: "Personas capacitadas",
+      icon: Users,
     },
     {
-      number: "+50",
-      label: "Programas activos",
-      icon: BookOpen,
+      number: "+200",
+      label: "Empresas atendidas",
+      icon: Building2,
     },
     {
-      number: "10+",
+      number: "15+",
       label: "Años de experiencia",
       icon: Clock,
     },
     {
       number: "98%",
-      label: "De recomendación",
-      icon: Heart,
+      label: "Satisfacción del cliente",
+      icon: Smile,
     },
   ];
 
   useGSAP(() => {
-    // Explicit fromTo definition to prevent elements from staying hidden
     gsap.fromTo(".stat-col",
       { opacity: 0, y: 30 },
       {
@@ -119,7 +117,6 @@ export default function Stats() {
   return (
     <section ref={statsRef} className="py-16 bg-transparent relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Floating deep navy panel with asymmetric corners */}
         <div className="bg-primary text-white p-10 sm:p-12 rounded-[40px_40px_40px_0px] shadow-lg border border-slate-200/10 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary via-[#17325D] to-[#0F223F] -z-10" />
 
@@ -128,15 +125,12 @@ export default function Stats() {
               const Icon = stat.icon;
               return (
                 <div key={index} className="stat-col flex flex-col items-center space-y-3">
-                  {/* Icon wrapper - Amber-400 has high contrast on deep navy background */}
                   <div className="p-3 bg-white/5 rounded-2xl mb-1 text-amber-400 border border-white/5 shadow-inner">
                     <Icon className="w-5 h-5 text-amber-400" />
                   </div>
                   
-                  {/* Large statistical numbers */}
                   <StatNumber value={stat.number} />
                   
-                  {/* Stats label */}
                   <span className="text-[10px] sm:text-xs uppercase tracking-widest text-slate-300 font-bold">
                     {stat.label}
                   </span>

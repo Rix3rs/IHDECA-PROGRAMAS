@@ -9,7 +9,7 @@
   --color-text-dark: #0F2C59;
   --color-text-slate: #475569;
 
-  --font-academic: var(--font-academic), serif;
+  --font-academic: var(--font-academic), sans-serif;
   --font-sans: var(--font-sans), sans-serif;
 }
 

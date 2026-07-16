@@ -46,10 +46,10 @@ export default function Navbar() {
   }, { scope: headerRef });
 
   const navLinks = [
-    { name: "Cursos", href: "#cursos" },
-    { name: "Nosotros", href: "#nosotros" },
-    { name: "Testimonios", href: "#testimonios" },
-    { name: "Contacto", href: "#contacto" },
+    { name: "Inicio", href: "/" },
+    { name: "Cursos", href: "/cursos" },
+    { name: "Nosotros", href: "/nosotros" },
+    { name: "Contacto", href: "/contacto" },
   ];
 
   return (
@@ -88,7 +88,7 @@ export default function Navbar() {
           {/* Desktop CTA */}
           <div className="hidden md:block">
             <Link
-              href="#contacto"
+              href="/contacto"
               className="nav-cta-anim inline-flex items-center justify-center px-5 py-2.5 bg-accent text-white font-sans font-bold uppercase tracking-wider text-[11px] rounded-lg nicdark-btn-radius transition-all duration-300 hover:bg-primary cursor-pointer shadow-sm hover:shadow-[0_4px_10px_rgba(230,126,34,0.15)]"
             >
               Inscríbete
@@ -131,7 +131,7 @@ export default function Navbar() {
           ))}
           <div className="pt-2 px-3">
             <Link
-              href="#contacto"
+              href="/contacto"
               onClick={() => setIsOpen(false)}
               className="w-full text-center inline-flex items-center justify-center px-5 py-3 bg-accent text-white text-xs font-bold uppercase tracking-wider rounded-lg nicdark-btn-radius hover:bg-primary transition-colors cursor-pointer"
             >

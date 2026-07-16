@@ -6,35 +6,16 @@ import { Clock, BookOpen, Star } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { courses } from "@/app/data/courses";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
-}
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  duration: string;
-  lessons: string;
-  instructor: string;
-  instructorInitials: string;
-  instructorColor: string;
-  rating: number;
-  price: string;
-  originalPrice?: string;
-  gradient: string;
-  emoji: string;
-  badgeBg: string;
-  badgeText: string;
 }
 
 export default function FeaturedCourses() {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    // Explicit fromTo definition to prevent course cards from getting stuck at opacity 0
     gsap.fromTo(".course-card",
       { opacity: 0, y: 45, scale: 0.95 },
       {
@@ -62,79 +43,6 @@ export default function FeaturedCourses() {
     };
   }, { scope: sectionRef });
 
-  const courses: Course[] = [
-    {
-      id: "web-dev",
-      title: "Desarrollo Web Full Stack Moderno",
-      description: "Aprende JavaScript, React, Next.js, Node.js y bases de datos desde cero para crear aplicaciones web reales y profesionales.",
-      category: "TECNOLOGÍA",
-      duration: "16 semanas",
-      lessons: "64 Lecciones",
-      instructor: "Carlos Mendoza",
-      instructorInitials: "CM",
-      instructorColor: "bg-blue-600",
-      rating: 4.9,
-      price: "$299 USD",
-      originalPrice: "$450 USD",
-      gradient: "from-blue-600 to-indigo-700",
-      emoji: "💻",
-      badgeBg: "bg-blue-50",
-      badgeText: "text-blue-700"
-    },
-    {
-      id: "growth-mktg",
-      title: "Marketing Digital & Estrategias de Growth",
-      description: "Domina SEO, SEM, analítica web, embudos de conversión y técnicas de crecimiento acelerado para impulsar negocios digitales.",
-      category: "NEGOCIOS",
-      duration: "10 semanas",
-      lessons: "40 Lecciones",
-      instructor: "Sofía Altamirano",
-      instructorInitials: "SA",
-      instructorColor: "bg-emerald-600",
-      rating: 4.8,
-      price: "$189 USD",
-      gradient: "from-emerald-500 to-teal-700",
-      emoji: "📈",
-      badgeBg: "bg-emerald-50",
-      badgeText: "text-emerald-700"
-    },
-    {
-      id: "adv-english",
-      title: "Inglés Corporativo Avanzado & Negocios",
-      description: "Adquiere fluidez conversacional en contextos ejecutivos, presentaciones de negocios y redacción técnica profesional.",
-      category: "IDIOMAS",
-      duration: "12 semanas",
-      lessons: "48 Lecciones",
-      instructor: "John Harrison",
-      instructorInitials: "JH",
-      instructorColor: "bg-purple-600",
-      rating: 5.0,
-      price: "$149 USD",
-      originalPrice: "$220 USD",
-      gradient: "from-purple-500 to-indigo-700",
-      emoji: "🗣️",
-      badgeBg: "bg-purple-50",
-      badgeText: "text-purple-700"
-    },
-    {
-      id: "ui-ux-design",
-      title: "Diseño de Interfaces & Experiencia de Usuario",
-      description: "Diseña wireframes, prototipos navegables en Figma y aprende principios UX fundamentales probados con usuarios reales.",
-      category: "DISEÑO",
-      duration: "14 semanas",
-      lessons: "56 Lecciones",
-      instructor: "Elena Rossi",
-      instructorInitials: "ER",
-      instructorColor: "bg-rose-600",
-      rating: 4.7,
-      price: "$249 USD",
-      gradient: "from-rose-500 to-orange-600",
-      emoji: "🎨",
-      badgeBg: "bg-rose-50",
-      badgeText: "text-rose-700"
-    }
-  ];
-
   return (
     <section ref={sectionRef} id="cursos" className="py-24 bg-transparent relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -143,22 +51,22 @@ export default function FeaturedCourses() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div className="space-y-3 max-w-2xl text-center md:text-left">
             <span className="text-xs font-bold uppercase tracking-[0.2em] text-accent">
-              CAPACITACIÓN A TU MEDIDA
+              Capacitación en línea
             </span>
             <h2 className="font-academic text-3xl sm:text-4xl lg:text-5xl font-extrabold text-primary tracking-tight">
-              Cursos Destacados
+              Cursos destacados
             </h2>
             <p className="text-base sm:text-lg text-text-slate font-sans leading-relaxed">
-              Programas diseñados para ayudarte a adquirir habilidades prácticas demandadas en el mercado laboral contemporáneo.
+              Programas de formación diseñados para fortalecer habilidades prácticas en el ámbito profesional y laboral.
             </p>
           </div>
           
           <div className="flex justify-center flex-shrink-0">
             <Link
-              href="#contacto"
+              href="/cursos"
               className="inline-flex items-center justify-center px-6 py-3 border-2 border-primary text-primary hover:bg-primary hover:text-white text-xs uppercase tracking-wider font-bold rounded-lg nicdark-btn-radius transition-all duration-300 cursor-pointer shadow-sm"
             >
-              Solicitar catálogo
+              Ver catálogo completo
             </Link>
           </div>
         </div>
@@ -167,10 +75,10 @@ export default function FeaturedCourses() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {courses.map((course) => (
             <div
-              key={course.id}
+              key={course.slug}
               className="course-card group flex flex-col nicdark-card overflow-hidden transition-[box-shadow,border-color] duration-300"
             >
-              {/* Image Block with asymmetric top rounded border */}
+              {/* Image Block */}
               <div className={`relative h-44 w-full bg-gradient-to-br ${course.gradient} flex items-center justify-center p-6 text-white`}>
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:12px_12px]" />
                 
@@ -195,7 +103,6 @@ export default function FeaturedCourses() {
                     </div>
                     <span className="font-semibold text-slate-700">{course.instructor}</span>
                   </div>
-                  {/* High contrast rating text separated from gold star */}
                   <span className="flex items-center gap-1 text-slate-700 font-bold">
                     <Star className="w-3.5 h-3.5 text-yellow-500 fill-current" />
                     {course.rating.toFixed(1)}
@@ -207,12 +114,12 @@ export default function FeaturedCourses() {
                   {course.title}
                 </h3>
 
-                {/* Course Description with high contrast */}
+                {/* Course Description */}
                 <p className="text-xs sm:text-sm text-text-slate leading-relaxed line-clamp-3 font-sans">
                   {course.description}
                 </p>
 
-                {/* Meta details list with compliant text-slate-600 */}
+                {/* Meta details list */}
                 <div className="flex items-center gap-4 text-[11px] text-slate-600 font-semibold pt-2.5 border-t border-slate-100 font-sans">
                   <span className="flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-slate-500" />
@@ -238,7 +145,7 @@ export default function FeaturedCourses() {
                   </div>
                   
                   <Link
-                    href="#contacto"
+                    href={`/cursos/${course.slug}`}
                     className="inline-flex items-center gap-1 px-4 py-2 border-2 border-accent text-accent hover:bg-accent hover:text-white uppercase tracking-wider text-[10px] font-bold rounded-lg nicdark-btn-radius transition-all duration-300 cursor-pointer shadow-sm hover:shadow-[0_4px_10px_rgba(230,126,34,0.15)]"
                   >
                     Ver más

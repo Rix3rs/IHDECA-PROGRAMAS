@@ -31,7 +31,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-16">
           
           {/* Brand details */}
-          <div className="lg:col-span-5 space-y-5">
+          <div className="lg:col-span-4 space-y-5">
             <Link href="/" className="flex items-center gap-3 group">
               <img
                 src="/logo.webp"
@@ -40,7 +40,7 @@ export default function Footer() {
               />
             </Link>
             <p className="text-sm text-slate-300 font-sans leading-relaxed max-w-sm">
-              Institución enfocada en el desarrollo de programas prácticos y certificaciones especializadas para potenciar la inserción laboral de profesionales modernos.
+              IHDECA es una institución dedicada a la capacitación profesional y consultoría. Ofrecemos formación orientada al desarrollo de habilidades laborales, liderazgo, comunicación y crecimiento profesional para personas, equipos y organizaciones.
             </p>
             {/* Social handles */}
             <div className="flex gap-3 pt-2">
@@ -66,16 +66,16 @@ export default function Footer() {
           </div>
 
           {/* Quick links block */}
-          <div className="lg:col-span-3 space-y-5 font-sans">
+          <div className="lg:col-span-2 space-y-5 font-sans">
             <h4 className="text-xs font-bold uppercase tracking-widest text-white">
               Enlaces Rápidos
             </h4>
             <ul className="space-y-3 text-xs font-bold text-slate-300 uppercase tracking-wider">
               {[
-                { name: "Cursos y Áreas", href: "#cursos" },
-                { name: "Sobre Nosotros", href: "#nosotros" },
-                { name: "Testimonios", href: "#testimonios" },
-                { name: "Contacto / Admisiones", href: "#contacto" },
+                { name: "Inicio", href: "/" },
+                { name: "Cursos", href: "/cursos" },
+                { name: "Nosotros", href: "/nosotros" },
+                { name: "Contacto", href: "/contacto" },
               ].map((item, idx) => (
                 <li key={idx}>
                   <Link href={item.href} className="hover:text-accent transition-colors cursor-pointer">
@@ -83,6 +83,21 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
+            </ul>
+          </div>
+
+          {/* Our Brands block */}
+          <div className="lg:col-span-2 space-y-5 font-sans">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white">
+              Nuestras Marcas
+            </h4>
+            <ul className="space-y-3 text-xs font-bold text-slate-300 uppercase tracking-wider">
+              <li>
+                <span className="text-slate-300 block">EHSA Programas</span>
+              </li>
+              <li>
+                <span className="text-slate-300 block">EHSA Proyectos</span>
+              </li>
             </ul>
           </div>
 
@@ -95,19 +110,19 @@ export default function Footer() {
               <li className="flex gap-3 items-start normal-case font-normal text-slate-300">
                 <MapPin className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
                 <span className="text-xs font-medium font-sans">
-                  Paseo de la Reforma #300, Col. Juárez, C.P. 06600, Ciudad de México, CDMX.
+                  Cerro de Picachos 760-L-20, Col. Obispado, Monterrey, Nuevo León, C.P. 64060
                 </span>
               </li>
               <li className="flex gap-3 items-center">
                 <Phone className="w-5 h-5 text-accent flex-shrink-0" />
-                <a href="tel:+525512345678" className="hover:text-accent transition-colors">
-                  +52 (55) 1234-5678
+                <a href="tel:8110330553" className="hover:text-accent transition-colors">
+                  81 1033 0553
                 </a>
               </li>
               <li className="flex gap-3 items-center lowercase font-normal">
                 <Mail className="w-5 h-5 text-accent flex-shrink-0" />
-                <a href="mailto:info@ihdeca.edu.mx" className="hover:text-accent transition-colors font-medium">
-                  info@ihdeca.edu.mx
+                <a href="mailto:Informes@ihdecaprogramas.com.mx" className="hover:text-accent transition-colors font-medium">
+                  Informes@ihdecaprogramas.com.mx
                 </a>
               </li>
             </ul>
@@ -121,8 +136,8 @@ export default function Footer() {
             © {new Date().getFullYear()} IHDECA. Todos los derechos reservados.
           </span>
           <span className="text-[11px] text-slate-400 font-semibold flex gap-4">
-            <Link href="#contacto" className="hover:underline hover:text-accent">Aviso de Privacidad</Link>
-            <Link href="#contacto" className="hover:underline hover:text-accent">Términos de Servicio</Link>
+            <Link href="/aviso-de-privacidad" className="hover:underline hover:text-accent">Aviso de Privacidad</Link>
+            <Link href="/terminos-y-condiciones" className="hover:underline hover:text-accent">Términos y Condiciones</Link>
           </span>
         </div>
 
