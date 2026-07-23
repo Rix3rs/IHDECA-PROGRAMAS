@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { TrendingUp, Award, HelpCircle, ArrowRight } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { categories } from "@/app/data/courses";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -14,10 +13,20 @@ if (typeof window !== "undefined") {
 
 export default function Categories() {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setCategories(data);
+      })
+      .catch(err => console.error("Error loading categories:", err));
+  }, []);
 
   useGSAP(() => {
     gsap.fromTo(".category-card", 
-      { opacity: 0, y: 40, scale: 0.95 },
+      { opacity: 0, y: 35, scale: 0.97 },
       {
         scrollTrigger: {
           trigger: sectionRef.current,
@@ -29,7 +38,7 @@ export default function Categories() {
         scale: 1,
         stagger: 0.1,
         duration: 0.8,
-        ease: "power2.out"
+        ease: "power3.out"
       }
     );
 
@@ -83,10 +92,16 @@ export default function Categories() {
                 className="category-card group nicdark-card p-8 flex flex-col justify-between items-center text-center cursor-pointer transition-[box-shadow,border-color] duration-300"
               >
                 <div className="flex flex-col items-center">
-                  {/* Icon Block */}
-                  <div className={`w-16 h-16 rounded-[16px_16px_16px_0px] flex items-center justify-center border ${category.borderColor} ${category.color} mb-6 transition-all duration-300 group-hover:scale-110`}>
-                    <Icon className={`w-8 h-8 ${category.textColor}`} />
-                  </div>
+                  {/* Icon / Image Block */}
+                  {category.imageUrl ? (
+                    <div className="w-full h-32 rounded-[16px_16px_16px_0px] overflow-hidden border border-slate-200 mb-6 transition-all duration-300 group-hover:scale-[1.02]">
+                      <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className={`w-16 h-16 rounded-[16px_16px_16px_0px] flex items-center justify-center border ${category.borderColor} ${category.color} mb-6 transition-all duration-300 group-hover:scale-110`}>
+                      <Icon className={`w-8 h-8 ${category.textColor}`} />
+                    </div>
+                  )}
                   
                   {/* Category Name */}
                   <h3 className="font-sans text-xl font-bold text-primary mb-3 group-hover:text-accent transition-colors duration-200">

@@ -6,25 +6,29 @@ import { useParams } from "next/navigation";
 import { Clock, BookOpen, Star, ArrowLeft, Check, CheckCircle2, Send, Loader2, Info } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
-import { courses as staticCourses, Course } from "@/app/data/courses";
-
+import { usePurchasedCourses } from "@/app/hooks/usePurchasedCourses";
 export default function CourseDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const [course, setCourse] = useState<Course | undefined>(() => {
-    return staticCourses.find((c) => c.slug === slug);
-  });
+  const [course, setCourse] = useState<any>(null);
+  const [courseLoading, setCourseLoading] = useState(true);
+  const { hasPurchased } = usePurchasedCourses();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("ihdeca_courses");
-      if (saved) {
-        const parsed: Course[] = JSON.parse(saved);
-        const found = parsed.find((c) => c.slug === slug);
-        setCourse(found);
-      }
-    }
+    fetch("/api/courses")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const found = data.find((c: any) => c.slug === slug);
+          setCourse(found || null);
+        }
+        setCourseLoading(false);
+      })
+      .catch(err => {
+        console.error("Error loading course details:", err);
+        setCourseLoading(false);
+      });
   }, [slug]);
 
   const [form, setForm] = useState({
@@ -53,7 +57,7 @@ export default function CourseDetailPage() {
     setForm(prev => ({ ...prev, captchaAnswer: "" }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nombre || !form.telefono || !form.email || !form.mensaje) {
       setError("Por favor, completa los campos requeridos.");
@@ -73,7 +77,25 @@ export default function CourseDetailPage() {
     setError("");
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: form.nombre,
+          telefono: form.telefono,
+          email: form.email,
+          curso: course?.title || "General",
+          empresa: form.empresa,
+          mensaje: form.mensaje
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Error al registrar la consulta");
+      }
+
       setLoading(false);
       setSuccess(true);
       setForm({
@@ -86,8 +108,24 @@ export default function CourseDetailPage() {
         captchaAnswer: "",
       });
       generateCaptcha();
-    }, 1200);
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || "No se pudo enviar la consulta. Intenta de nuevo.");
+    }
   };
+
+  if (courseLoading) {
+    return (
+      <>
+        <Navbar />
+        <main className="flex-grow pt-32 pb-24 text-center font-sans max-w-md mx-auto px-4">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
+          <p className="text-sm text-slate-500 mt-4">Cargando curso...</p>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   if (!course) {
     return (
@@ -120,9 +158,24 @@ export default function CourseDetailPage() {
 
       <main className="flex-grow pt-24 font-sans">
         {/* Course Header Banner */}
-        <section className={`bg-gradient-to-br ${course.gradient} text-white py-16 relative overflow-hidden`}>
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:24px_24px] opacity-20" />
-          
+        <section className="relative text-white py-16 overflow-hidden bg-slate-900">
+          {course.coverUrl ? (
+            <>
+              <img
+                src={course.coverUrl}
+                alt={course.coverAlt || course.title}
+                style={{ objectPosition: `center ${course.coverPositionY !== undefined ? course.coverPositionY : 50}%` }}
+                className="absolute inset-0 w-full h-full object-cover opacity-35"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/20" />
+            </>
+          ) : (
+            <>
+              <div className={`absolute inset-0 bg-gradient-to-br ${course.gradient}`} />
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:24px_24px] opacity-20" />
+            </>
+          )}
+
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <Link
@@ -151,7 +204,7 @@ export default function CourseDetailPage() {
               </div>
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 text-amber-400 fill-current" />
-                <span><strong>{course.rating.toFixed(1)}</strong> de valoración</span>
+                <span><strong>{Number(course.rating || 5).toFixed(1)}</strong> de valoración</span>
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4 text-white/80" />
@@ -165,10 +218,10 @@ export default function CourseDetailPage() {
         <section className="py-16 bg-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-              
+
               {/* Left Column: Details */}
               <div className="lg:col-span-8 space-y-12">
-                
+
                 {/* Description */}
                 <div className="space-y-4">
                   <h2 className="text-xl font-bold text-primary border-l-4 border-accent pl-3">
@@ -186,7 +239,7 @@ export default function CourseDetailPage() {
                       Objetivos de aprendizaje
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {course.objetivos.map((obj, i) => (
+                      {course.objetivos.map((obj: string, i: number) => (
                         <div key={i} className="flex gap-3 items-start p-3 bg-slate-50 rounded-xl border border-slate-100">
                           <Check className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                           <p className="text-xs text-slate-700 font-bold">{obj}</p>
@@ -203,11 +256,11 @@ export default function CourseDetailPage() {
                       Temario del programa
                     </h2>
                     <div className="relative border-l border-slate-200 pl-6 space-y-6">
-                      {course.temario.map((item, i) => (
+                      {course.temario.map((item: string, i: number) => (
                         <div key={i} className="relative">
                           {/* Timeline dot */}
                           <span className="absolute -left-[30px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white border-2 border-white" />
-                          
+
                           <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm space-y-1">
                             <span className="text-[10px] font-bold text-accent uppercase tracking-wider">
                               Módulo {i + 1}
@@ -226,7 +279,7 @@ export default function CourseDetailPage() {
                     ¿A quién va dirigido?
                   </h2>
                   <div className="flex flex-wrap gap-2">
-                    {course.dirigidoA.map((item, i) => (
+                    {course.dirigidoA.map((item: string, i: number) => (
                       <span
                         key={i}
                         className="px-3.5 py-1.5 bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 rounded-lg"
@@ -241,13 +294,13 @@ export default function CourseDetailPage() {
 
               {/* Right Column: Contact & Sidebar */}
               <div className="lg:col-span-4 space-y-8">
-                
+
                 {/* Sidebar Card */}
                 <div className="bg-white border border-slate-200/80 rounded-[40px_40px_40px_0px] p-6 shadow-md space-y-6">
                   <h3 className="text-lg font-bold text-primary pb-3 border-b border-slate-100">
                     Ficha Técnica
                   </h3>
-                  
+
                   <div className="space-y-4 font-sans text-xs">
                     <div className="flex justify-between items-center py-2 border-b border-slate-50">
                       <span className="text-slate-500 font-semibold">Modalidad:</span>
@@ -259,7 +312,11 @@ export default function CourseDetailPage() {
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-slate-50">
                       <span className="text-slate-500 font-semibold">Inversión:</span>
-                      <strong className="text-primary">{course.price}</strong>
+                      <strong className="text-primary">
+                        {course.precioMxn
+                          ? new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(course.precioMxn)
+                          : course.price}
+                      </strong>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-slate-50">
                       <span className="text-slate-500 font-semibold">Duración:</span>
@@ -271,12 +328,26 @@ export default function CourseDetailPage() {
                     </div>
                   </div>
 
-                  <a
-                    href="#contacto-ficha"
-                    className="w-full text-center inline-block px-5 py-3 bg-accent text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-primary transition-colors cursor-pointer shadow-sm"
-                  >
-                    Inscríbete / Solicitar Info
-                  </a>
+                  {hasPurchased(course.slug) ? (
+                    <span className="w-full text-center inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold uppercase tracking-wider rounded-lg nicdark-btn-radius">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Ya estás inscrito
+                    </span>
+                  ) : course.precioMxn ? (
+                    <Link
+                      href={`/cursos/${course.slug}/pago`}
+                      className="w-full text-center inline-block px-5 py-3 bg-accent text-white text-xs font-bold uppercase tracking-wider rounded-lg nicdark-btn-radius hover:bg-primary transition-colors cursor-pointer shadow-sm"
+                    >
+                      Pagar ahora
+                    </Link>
+                  ) : (
+                    <a
+                      href="#contacto-ficha"
+                      className="w-full text-center inline-block px-5 py-3 bg-accent text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-primary transition-colors cursor-pointer shadow-sm"
+                    >
+                      Inscríbete / Solicitar Info
+                    </a>
+                  )}
                 </div>
 
                 {/* Contact Form pre-filled for this course */}
@@ -403,7 +474,7 @@ export default function CourseDetailPage() {
                       <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
                         <label htmlFor="cap-ficha" className="block text-[8px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1">
                           <Info className="w-3.5 h-3.5 text-accent" />
-                          Seguridad anti-spam
+                          verificar que no eres un robot
                         </label>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-bold text-primary bg-slate-200 px-2 py-1.5 rounded-lg whitespace-nowrap">

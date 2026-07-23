@@ -15,7 +15,10 @@ import {
   FileText, 
   FolderPlus,
   ArrowLeft,
-  UserCog
+  UserCog,
+  Inbox,
+  LinkIcon,
+  Tags
 } from "lucide-react";
 
 interface SidebarProps {
@@ -52,24 +55,28 @@ export default function Sidebar({ role, activeView, onViewChange, userName, user
     admin: [
       { id: "resumen", label: "Estadísticas", icon: LayoutDashboard },
       { id: "cursos", label: "Gestionar Cursos", icon: FolderPlus },
-      { id: "alumnos", label: "Aprobaciones", icon: Clock },
+      { id: "leads", label: "Leads de Contacto", icon: Inbox },
+      { id: "categorias", label: "Categorías", icon: Tags },
       { id: "usuarios", label: "Gestionar Usuarios", icon: UserCog },
     ],
     docente: [
       { id: "cursos", label: "Mis Materias", icon: BookOpen },
+      { id: "temario", label: "Temario y Objetivos", icon: FileText },
+      { id: "materiales", label: "Materiales", icon: LinkIcon },
       { id: "calificaciones", label: "Calificar Alumnos", icon: Award },
     ],
     estudiante: [
       { id: "cursos", label: "Mis Cursos", icon: BookOpen },
       { id: "temarios", label: "Avance de Módulos", icon: FileText },
       { id: "calificaciones", label: "Calificaciones", icon: Award },
+      { id: "perfil", label: "Mi Perfil", icon: User },
     ]
   };
 
   const currentMenu = menuItems[role];
 
   return (
-    <aside className="w-64 bg-primary text-white flex flex-col justify-between border-r border-white/10 h-screen sticky top-0 font-sans z-30 select-none">
+    <aside className="w-64 min-w-64 flex-shrink-0 bg-primary text-white flex flex-col justify-between border-r border-white/10 h-screen sticky top-0 font-sans z-30 select-none">
       
       {/* Upper Section */}
       <div className="flex flex-col space-y-8 pt-8 px-6">
@@ -83,19 +90,12 @@ export default function Sidebar({ role, activeView, onViewChange, userName, user
               className="h-9 w-auto object-contain brightness-0 invert transition-transform group-hover:scale-105"
             />
           </Link>
-          <Link 
-            href="/dashboard" 
-            className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-slate-400 hover:text-accent transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Cambiar Rol
-          </Link>
         </div>
 
         {/* User Info snippet */}
         <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5 shadow-inner">
           <div className="w-10 h-10 rounded-full bg-accent text-white font-bold flex items-center justify-center text-sm shadow-sm">
-            {userName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
+            {(userName || "Usuario").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
           </div>
           <div className="flex flex-col justify-center min-w-0">
             <span className="text-xs font-bold truncate text-white">{userName}</span>
@@ -136,7 +136,10 @@ export default function Sidebar({ role, activeView, onViewChange, userName, user
       {/* Logout Action */}
       <div className="p-6 border-t border-white/10">
         <button
-          onClick={() => router.push("/dashboard")}
+          onClick={() => {
+            localStorage.removeItem("ihdeca_user");
+            router.push("/");
+          }}
           className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider text-rose-300 hover:bg-rose-500/10 hover:text-rose-400 rounded-xl transition-all cursor-pointer"
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />

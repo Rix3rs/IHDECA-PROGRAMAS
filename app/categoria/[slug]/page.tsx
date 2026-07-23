@@ -16,11 +16,14 @@ export default function CategoryPage() {
   const [categoryCourses, setCategoryCourses] = useState<Course[]>([]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("ihdeca_courses");
-      const currentCourses: Course[] = saved ? JSON.parse(saved) : staticCourses;
-      setCategoryCourses(currentCourses.filter((c) => c.categorySlug === slug));
-    }
+    fetch("/api/courses")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCategoryCourses(data.filter((c) => c.categorySlug === slug && c.publicado !== false));
+        }
+      })
+      .catch(err => console.error("Error loading courses:", err));
   }, [slug]);
 
   if (!category) {
@@ -93,11 +96,23 @@ export default function CategoryPage() {
                     key={course.slug}
                     className="group flex flex-col nicdark-card overflow-hidden transition-[box-shadow,border-color] duration-300"
                   >
-                    {/* Header */}
-                    <div className={`relative h-40 w-full bg-gradient-to-br ${course.gradient} flex items-center justify-center p-6 text-white`}>
-                      <span className="text-5xl transform transition-transform duration-500 group-hover:scale-110 select-none">
-                        {course.emoji}
-                      </span>
+                    {/* Cover Header */}
+                    <div className="relative h-40 w-full overflow-hidden flex items-center justify-center text-white bg-slate-100">
+                      {course.coverUrl ? (
+                        <img
+                          src={course.coverUrl}
+                          alt={course.coverAlt || course.title}
+                          style={{ objectPosition: `center ${course.coverPositionY !== undefined ? course.coverPositionY : 50}%` }}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <>
+                          <div className={`absolute inset-0 bg-gradient-to-br ${course.gradient}`} />
+                          <div className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center relative z-10 transition-transform duration-500 group-hover:scale-110">
+                            <BookOpen className="w-7 h-7 text-white/90" />
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {/* Body */}

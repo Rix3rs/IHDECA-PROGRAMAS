@@ -1,0 +1,156 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                 String   @id @default(uuid())
+  email              String   @unique
+  nombre             String
+  contrasena         String
+  rol                String   // "ADMIN", "TEACHER", "STUDENT"
+  
+  // Docente Profile Fields
+  zoomLink           String?
+  
+  // Estudiante Profile Fields
+  calificacion       Int?
+  comentariosDocente String?
+  progreso           Int      @default(0)
+  estadoInscripcion  String   @default("Pendiente") // "Pendiente", "Aceptado"
+  fechaRegistro      String?
+  empresa            String?
+
+  // Legacy field - migrating to UserCourse table
+  cursoAsignadoSlug  String?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  cursos             UserCourse[]
+}
+
+model UserCourse {
+  id         Int      @id @default(autoincrement())
+  userId     String
+  courseSlug String
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course   @relation(fields: [courseSlug], references: [slug], onDelete: Cascade)
+
+  @@unique([userId, courseSlug])
+}
+
+model Course {
+  slug                String           @id
+  title               String
+  description         String
+  extendedDescription String
+  category            String
+  categorySlug        String
+  duration            String
+  lessons             String
+  price               String
+  precioMxn           Int?              // Precio en pesos mexicanos (entero)
+  instructor          String?          @default("Por confirmar")
+  gradient            String           @default("from-blue-600 to-indigo-700")
+  coverUrl            String?
+  coverPositionY      Int              @default(50)
+  coverAlt            String?
+  fechas              String           @default("Por confirmar")
+  publicado           Boolean          @default(false)
+  modalidad           String           @default("En línea")
+  objetivos           String?
+  dirigidoA           String?
+
+  // Relations
+  temario             SyllabusModule[]
+  usuarios            UserCourse[]
+  materiales          Material[]
+
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+}
+
+model SyllabusModule {
+  id         Int      @id @default(autoincrement())
+  contenido  String
+  courseSlug String
+  course     Course   @relation(fields: [courseSlug], references: [slug], onDelete: Cascade)
+}
+
+model Lead {
+  id        String   @id @default(uuid())
+  nombre    String
+  telefono  String
+  email     String
+  curso     String
+  empresa   String?
+  mensaje   String
+  estado    String   @default("Nuevo")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Pago {
+  id                    Int      @id @default(autoincrement())
+  amount                Int
+  currency              String   @default("mxn")
+  courseSlug            String
+  courseTitle           String
+  userEmail             String
+  userName              String
+  stripePaymentIntentId String?
+  createdAt             DateTime @default(now())
+}
+
+model Category {
+  slug        String   @id
+  name        String
+  description String
+  iconName    String   @default("HelpCircle")
+  color       String   @default("bg-blue-50/70")
+  textColor   String   @default("text-blue-600")
+  borderColor String   @default("border-blue-100")
+  imageUrl    String?
+  count       String   @default("0 cursos")
+  createdAt   DateTime @default(now())
+}
+
+model Material {
+  id         Int      @id @default(autoincrement())
+  courseSlug String
+  title      String
+  type       String   @default("link")
+  url        String
+  course     Course   @relation(fields: [courseSlug], references: [slug], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+model ResetToken {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("info")
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+

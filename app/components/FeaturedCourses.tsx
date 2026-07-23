@@ -2,11 +2,12 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { Clock, BookOpen, Star } from "lucide-react";
+import { Clock, BookOpen, Star, CheckCircle2 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { courses as staticCourses, Course } from "@/app/data/courses";
+import { usePurchasedCourses } from "@/app/hooks/usePurchasedCourses";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -14,20 +15,24 @@ if (typeof window !== "undefined") {
 
 export default function FeaturedCourses() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const [coursesList, setCoursesList] = useState<Course[]>(staticCourses);
+  const [coursesList, setCoursesList] = useState<Course[]>([]);
+  const { hasPurchased } = usePurchasedCourses();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("ihdeca_courses");
-      if (saved) {
-        setCoursesList(JSON.parse(saved));
-      }
-    }
+    fetch("/api/courses")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCoursesList(data);
+        }
+      })
+      .catch(err => console.error("Error loading courses:", err));
   }, []);
 
   useGSAP(() => {
     gsap.fromTo(".course-card",
-      { opacity: 0, y: 45, scale: 0.95 },
+      { opacity: 0, y: 35, scale: 0.97 },
       {
         scrollTrigger: {
           trigger: sectionRef.current,
@@ -37,9 +42,9 @@ export default function FeaturedCourses() {
         opacity: 1,
         y: 0,
         scale: 1,
-        stagger: 0.15,
-        duration: 0.9,
-        ease: "power2.out"
+        stagger: 0.12,
+        duration: 0.85,
+        ease: "power3.out"
       }
     );
 
@@ -83,22 +88,32 @@ export default function FeaturedCourses() {
 
         {/* Courses Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {coursesList.map((course) => (
+          {coursesList.filter(c => c.publicado !== false).map((course) => (
             <div
               key={course.slug}
               className="course-card group flex flex-col nicdark-card overflow-hidden transition-[box-shadow,border-color] duration-300"
             >
               {/* Image Block */}
-              <div className={`relative h-44 w-full bg-gradient-to-br ${course.gradient} flex items-center justify-center p-6 text-white`}>
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:12px_12px]" />
-                
-                {/* Visual Accent */}
-                <span className="text-5xl transform transition-transform duration-500 group-hover:scale-110 select-none">
-                  {course.emoji}
-                </span>
+              <div className="relative h-44 w-full overflow-hidden flex items-center justify-center text-white bg-slate-100">
+                {course.coverUrl ? (
+                  <img
+                    src={course.coverUrl}
+                    alt={course.coverAlt || course.title}
+                    style={{ objectPosition: `center ${course.coverPositionY !== undefined ? course.coverPositionY : 50}%` }}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                ) : (
+                  <>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${course.gradient}`} />
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:12px_12px]" />
+                    <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center relative z-10 transition-transform duration-500 group-hover:scale-110">
+                      <BookOpen className="w-8 h-8 text-white/90" />
+                    </div>
+                  </>
+                )}
                 
                 {/* Category Badge overlay */}
-                <div className="absolute top-4 left-4 bg-white text-primary font-bold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-md border border-slate-100 shadow-sm">
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm text-primary font-bold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-md border border-slate-100 shadow-sm z-10">
                   {course.category}
                 </div>
               </div>
@@ -150,16 +165,37 @@ export default function FeaturedCourses() {
                       </span>
                     )}
                     <span className="text-base font-bold text-primary leading-none">
-                      {course.price}
+                      {course.precioMxn
+                        ? new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(course.precioMxn)
+                        : course.price}
                     </span>
                   </div>
-                  
-                  <Link
-                    href={`/cursos/${course.slug}`}
-                    className="inline-flex items-center gap-1 px-4 py-2 border-2 border-accent text-accent hover:bg-accent hover:text-white uppercase tracking-wider text-[10px] font-bold rounded-lg nicdark-btn-radius transition-all duration-300 cursor-pointer shadow-sm hover:shadow-[0_4px_10px_rgba(230,126,34,0.15)]"
-                  >
-                    Ver más
-                  </Link>
+
+                  <div className="flex items-center gap-1.5">
+                    {hasPurchased(course.slug) ? (
+                      <span className="inline-flex items-center gap-1 px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold rounded-lg nicdark-btn-radius">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Ya inscrito
+                      </span>
+                    ) : (
+                      <>
+                        <Link
+                          href={`/cursos/${course.slug}`}
+                          className="inline-flex items-center gap-1 px-4 py-2 border-2 border-accent text-accent hover:bg-accent hover:text-white uppercase tracking-wider text-[10px] font-bold rounded-lg nicdark-btn-radius transition-all duration-300 cursor-pointer shadow-sm hover:shadow-[0_4px_10px_rgba(230,126,34,0.15)]"
+                        >
+                          Ver más
+                        </Link>
+                        {course.precioMxn && (
+                          <Link
+                            href={`/cursos/${course.slug}/pago`}
+                            className="inline-flex items-center gap-1 px-4 py-2 bg-accent text-white hover:bg-primary uppercase tracking-wider text-[10px] font-bold rounded-lg nicdark-btn-radius transition-all duration-300 cursor-pointer shadow-sm"
+                          >
+                            Pagar
+                          </Link>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

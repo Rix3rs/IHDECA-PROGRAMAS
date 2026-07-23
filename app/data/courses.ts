@@ -13,8 +13,9 @@ export interface Course {
   rating: number;
   price: string;
   originalPrice?: string;
+  precioMxn?: number | null;
   gradient: string;
-  emoji: string;
+  emoji?: string;
   badgeBg: string;
   badgeText: string;
   modalidad: string;
@@ -22,6 +23,10 @@ export interface Course {
   dirigidoA: string[];
   temario?: string[];
   objetivos?: string[];
+  coverUrl?: string;
+  coverPositionY?: number;
+  coverAlt?: string;
+  publicado?: boolean;
 }
 
 export interface Category {
@@ -104,6 +109,7 @@ export const courses: Course[] = [
     instructorColor: "bg-blue-600",
     rating: 4.9,
     price: "Por confirmar",
+    precioMxn: 799,
     gradient: "from-blue-600 to-indigo-700",
     emoji: "🎯",
     badgeBg: "bg-blue-50",
@@ -131,7 +137,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    slug: "comunicacion-asertiva",
+    slug: "comunicacion-efectiva",
     title: "Comunicación efectiva y asertiva en el trabajo",
     description: "Aprende a comunicar ideas, necesidades y acuerdos de manera clara, respetuosa y efectiva dentro del entorno profesional.",
     extendedDescription: "La comunicación es la base del éxito laboral. En este curso aprenderás técnicas prácticas para comunicar tus ideas, necesidades y acuerdos de manera clara, respetuosa, asertiva y sumamente efectiva en cualquier entorno profesional.",
@@ -144,6 +150,7 @@ export const courses: Course[] = [
     instructorColor: "bg-purple-600",
     rating: 4.8,
     price: "Por confirmar",
+    precioMxn: 599,
     gradient: "from-purple-500 to-indigo-700",
     emoji: "💬",
     badgeBg: "bg-purple-50",
@@ -183,6 +190,7 @@ export const courses: Course[] = [
     instructorColor: "bg-rose-600",
     rating: 4.9,
     price: "Por confirmar",
+    precioMxn: 699,
     gradient: "from-rose-500 to-orange-600",
     emoji: "🤝",
     badgeBg: "bg-rose-50",

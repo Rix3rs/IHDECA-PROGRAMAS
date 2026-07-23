@@ -18,47 +18,48 @@ export default function Hero() {
 
     // DESKTOP ANIMATION (lg and up)
     mm.add("(min-width: 1024px)", () => {
-      // Set initial positions for the collage scroll effect
+      // Initial positions for collage cards
       gsap.set(".hero-col-1", { x: -140 });
       gsap.set(".hero-col-2", { x: -70 });
       gsap.set(".hero-col-4", { x: 70 });
       gsap.set(".hero-col-5", { x: 140 });
-      gsap.set(".hero-center-img", { opacity: 0, y: 120, scale: 0.95 });
+      gsap.set(".hero-center-img", { opacity: 0, y: 80, scale: 0.96 });
       gsap.set(".hero-text-wrapper", { opacity: 1, scale: 1, y: 0 });
 
-      // Entrance animation
-      const entranceTl = gsap.timeline({ defaults: { ease: "power4.out", duration: 1.2 } });
-      entranceTl.fromTo(".hero-badge", { y: 20, opacity: 0 }, { y: 0, opacity: 1, delay: 0.2 });
-      entranceTl.fromTo(".hero-title", { y: 30, opacity: 0 }, { y: 0, opacity: 1 }, "-=0.9");
-      entranceTl.fromTo(".hero-asterisk", { scale: 0, rotation: -180 }, { scale: 1, rotation: 0, ease: "back.out(1.7)" }, "-=0.8");
-      entranceTl.fromTo(".hero-desc", { y: 15, opacity: 0 }, { y: 0, opacity: 1 }, "-=0.9");
-      entranceTl.fromTo(".hero-cta", { y: 15, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.1 }, "-=0.8");
+      // Smooth entrance sequence
+      const entranceTl = gsap.timeline({ defaults: { ease: "power3.out", duration: 1.1 } });
+      entranceTl.fromTo(".hero-badge", { y: 15, opacity: 0 }, { y: 0, opacity: 1, delay: 0.1 });
+      entranceTl.fromTo(".hero-title", { y: 25, opacity: 0 }, { y: 0, opacity: 1 }, "-=0.8");
+      entranceTl.fromTo(".hero-asterisk", { scale: 0, rotation: -180 }, { scale: 1, rotation: 0, ease: "back.out(1.7)" }, "-=0.7");
+      entranceTl.fromTo(".hero-desc", { y: 15, opacity: 0 }, { y: 0, opacity: 1 }, "-=0.8");
+      entranceTl.fromTo(".hero-cta", { y: 15, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.08 }, "-=0.7");
 
-      // ScrollTrigger Pinning & Collage Collapse Timeline with smooth scrub tracking
+      // ScrollTrigger Pinning & Collage Collapse Timeline synchronized with Lenis smooth scroll
       const scrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
-          end: "+=200%", // Scroll for 200% of viewport height to complete (slower, longer track)
-          scrub: 1.2, // Buttery smooth momentum tracking
+          end: "+=180%",
+          scrub: 1, // Ultra smooth momentum tracking
           pin: true,
-          anticipatePin: 1
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
         }
       });
 
-      scrollTl.to(".hero-text-wrapper", { opacity: 0, scale: 0.9, y: -50, ease: "none" });
-      scrollTl.to(".hero-center-img", { opacity: 1, y: 0, scale: 1, ease: "none" }, "<");
-      scrollTl.to(".hero-col-1", { x: 0, ease: "none" }, "<");
-      scrollTl.to(".hero-col-2", { x: 0, ease: "none" }, "<");
-      scrollTl.to(".hero-col-4", { x: 0, ease: "none" }, "<");
-      scrollTl.to(".hero-col-5", { x: 0, ease: "none" }, "<");
+      scrollTl.to(".hero-text-wrapper", { opacity: 0, scale: 0.92, y: -40, ease: "power1.inOut" });
+      scrollTl.to(".hero-center-img", { opacity: 1, y: 0, scale: 1, ease: "power1.inOut" }, "<");
+      scrollTl.to(".hero-col-1", { x: 0, ease: "power1.inOut" }, "<");
+      scrollTl.to(".hero-col-2", { x: 0, ease: "power1.inOut" }, "<");
+      scrollTl.to(".hero-col-4", { x: 0, ease: "power1.inOut" }, "<");
+      scrollTl.to(".hero-col-5", { x: 0, ease: "power1.inOut" }, "<");
     });
 
     // MOBILE & TABLET ANIMATION
     mm.add("(max-width: 1023px)", () => {
-      const tl = gsap.timeline({ defaults: { ease: "power4.out", duration: 1 } });
-      tl.fromTo(".hero-text-wrapper", { opacity: 0, y: 30 }, { opacity: 1, y: 0, delay: 0.2 });
-      tl.fromTo(".mobile-images-grid", { opacity: 0, y: 30 }, { opacity: 1, y: 0 }, "-=0.6");
+      const tl = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.9 } });
+      tl.fromTo(".hero-text-wrapper", { opacity: 0, y: 25 }, { opacity: 1, y: 0, delay: 0.1 });
+      tl.fromTo(".mobile-images-grid", { opacity: 0, y: 25 }, { opacity: 1, y: 0 }, "-=0.5");
     });
 
     return () => mm.revert();

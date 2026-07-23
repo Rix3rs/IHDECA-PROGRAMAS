@@ -89,7 +89,7 @@ export default function Stats() {
 
   useGSAP(() => {
     gsap.fromTo(".stat-col",
-      { opacity: 0, y: 30 },
+      { opacity: 0, y: 25 },
       {
         scrollTrigger: {
           trigger: statsRef.current,
@@ -99,8 +99,8 @@ export default function Stats() {
         opacity: 1,
         y: 0,
         stagger: 0.1,
-        duration: 0.7,
-        ease: "power2.out"
+        duration: 0.75,
+        ease: "power3.out"
       }
     );
 

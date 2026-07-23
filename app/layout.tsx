@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   authors: [{ name: "IHDECA" }],
 };
 
+import SmoothScrollProvider from "@/app/components/SmoothScrollProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,13 +33,15 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${montserrat.variable} ${gabarito.variable} h-full antialiased scroll-smooth`}
+      className={`${montserrat.variable} ${gabarito.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col text-slate-800 bg-white">
-        {/* Soft Aurora Boreal background blobs */}
-        <AuroraBackground />
-        {children}
-        <WhatsAppButton />
+        <SmoothScrollProvider>
+          {/* Soft Aurora Boreal background blobs */}
+          <AuroraBackground />
+          {children}
+          <WhatsAppButton />
+        </SmoothScrollProvider>
       </body>
     </html>
   );

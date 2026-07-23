@@ -21,7 +21,7 @@ export default function WhyUs() {
 
   useGSAP(() => {
     gsap.fromTo(".why-item",
-      { opacity: 0, y: 35 },
+      { opacity: 0, y: 30 },
       {
         scrollTrigger: {
           trigger: sectionRef.current,
@@ -30,9 +30,9 @@ export default function WhyUs() {
         },
         opacity: 1,
         y: 0,
-        stagger: 0.15,
+        stagger: 0.12,
         duration: 0.8,
-        ease: "power2.out"
+        ease: "power3.out"
       }
     );
 

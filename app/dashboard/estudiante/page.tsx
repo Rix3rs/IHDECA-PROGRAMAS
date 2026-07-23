@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { BookOpen, Award, CheckCircle, ExternalLink, Calendar, AlertTriangle, CheckSquare, Square } from "lucide-react";
+import { BookOpen, Award, CheckCircle, ExternalLink, Calendar, AlertTriangle, Clock, Printer, Download, X, User, Lock, FileText, Link2, Video } from "lucide-react";
 import Sidebar from "@/app/dashboard/components/Sidebar";
 import { initialStudents, initialTeachers, MockStudent } from "@/app/data/dashboardData";
 import { courses } from "@/app/data/courses";
@@ -9,51 +9,114 @@ import { courses } from "@/app/data/courses";
 export default function EstudianteDashboard() {
   const [activeView, setActiveView] = useState("cursos");
 
-  // Load from localStorage or defaults
-  const [students, setStudents] = useState<MockStudent[]>(initialStudents);
-  const [activeStudentId, setActiveStudentId] = useState("EST-001");
-  const [zoomLink, setZoomLink] = useState(initialTeachers[1].zoomLink);
+  const [students, setStudents] = useState<any[]>([]);
+  const [coursesList, setCoursesList] = useState<any[]>([]);
+  const [activeStudentId, setActiveStudentId] = useState<string>("");
+  const [zoomLink, setZoomLink] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileForm, setProfileForm] = useState({ nombre: "", password: "", confirmPassword: "" });
+  const [profileMsg, setProfileMsg] = useState("");
+  const [materials, setMaterials] = useState<any[]>([]);
 
   useEffect(() => {
     setIsMounted(true);
-    const savedStudents = localStorage.getItem("ihdeca_students");
-    if (savedStudents) {
-      setStudents(JSON.parse(savedStudents));
+
+    let loggedUserEmail = "";
+    const savedUser = localStorage.getItem("ihdeca_user");
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (parsed?.email) loggedUserEmail = parsed.email.toLowerCase();
+      } catch (err) {}
     }
-    const savedZoom = localStorage.getItem("ihdeca_zoom_link");
-    if (savedZoom) {
-      setZoomLink(savedZoom);
-    }
+
+    // Load courses from database
+    fetch("/api/courses")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setCoursesList(data);
+      })
+      .catch(err => console.error("Error loading courses:", err));
+
+    // Load users from database
+    fetch("/api/users")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const studentUsers = data.filter(u => u.rol === "STUDENT");
+          setStudents(studentUsers);
+
+          const matched = studentUsers.find(s => s.email.toLowerCase() === loggedUserEmail);
+          if (matched) {
+            setActiveStudentId(matched.id);
+            if (matched.zoomLink) setZoomLink(matched.zoomLink);
+          } else if (studentUsers.length > 0) {
+            setActiveStudentId(studentUsers[0].id);
+          }
+        }
+      })
+      .catch(err => console.error("Error loading users:", err));
   }, []);
 
-  // Sync back to local storage on changes
+  const activeStudent = students.find(s => s.id === activeStudentId) || {};
+
   useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem("ihdeca_students", JSON.stringify(students));
+    setProfileForm({ nombre: activeStudent.nombre || "", password: "", confirmPassword: "" });
+  }, [activeStudent.nombre, activeView]);
+
+  useEffect(() => {
+    if (!activeStudent.cursoSlug) return;
+    fetch(`/api/materials?courseSlug=${activeStudent.cursoSlug}`)
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setMaterials(d); })
+      .catch(() => {});
+  }, [activeStudent.cursoSlug]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileMsg("");
+    if (profileForm.password && profileForm.password !== profileForm.confirmPassword) {
+      setProfileMsg("Las contrasenas no coinciden");
+      return;
     }
-  }, [students, isMounted]);
-
-  const activeStudent = students.find(s => s.id === activeStudentId) || students[0];
-  const courseData = courses.find(c => c.slug === activeStudent.cursoSlug);
-
-  // Toggle syllabus modules to dynamically recalculate progress
-  const handleToggleModule = (index: number, totalModules: number) => {
-    // Basic progression logic: toggle updates local progress state
-    // Let's mock module checkbox checking
-    const baseProgress = Math.round(((index + 1) / totalModules) * 100);
-    
-    // We update student progress in local state
-    setStudents(prev => 
-      prev.map(st => st.id === activeStudentId 
-        ? { 
-            ...st, 
-            progreso: st.progreso === baseProgress ? Math.max(0, baseProgress - Math.round(100/totalModules)) : baseProgress 
-          } 
-        : st
-      )
-    );
+    try {
+      const body: any = { id: activeStudentId, nombre: profileForm.nombre };
+      if (profileForm.password) body.contrasena = profileForm.password;
+      const res = await fetch("/api/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        setProfileMsg("Perfil actualizado correctamente");
+        setShowProfileModal(false);
+      } else {
+        const d = await res.json();
+        setProfileMsg(d.error || "Error al actualizar");
+      }
+    } catch {
+      setProfileMsg("Error de conexion");
+    }
   };
+
+  const [selectedCourseSlug, setSelectedCourseSlug] = useState<string>("");
+
+  const studentCourseSlugs = activeStudent.cursoSlug
+    ? activeStudent.cursoSlug.split(",").map((s: string) => s.trim()).filter(Boolean)
+    : [];
+
+  const studentCourses = coursesList.filter(c => studentCourseSlugs.includes(c.slug));
+
+  useEffect(() => {
+    if (studentCourses.length > 0 && (!selectedCourseSlug || !studentCourses.some(c => c.slug === selectedCourseSlug))) {
+      setSelectedCourseSlug(studentCourses[0].slug);
+    }
+  }, [studentCourses, selectedCourseSlug]);
+
+  const activeCourseSlug = selectedCourseSlug || studentCourseSlugs[0] || activeStudent.cursoSlug;
+  const courseData = coursesList.find(c => c.slug === activeCourseSlug) || studentCourses[0];
 
   if (!isMounted) {
     return (
@@ -72,35 +135,37 @@ export default function EstudianteDashboard() {
         role="estudiante"
         activeView={activeView}
         onViewChange={setActiveView}
-        userName={activeStudent.nombre}
-        userEmail={activeStudent.email}
+        userName={activeStudent.nombre || "Estudiante"}
+        userEmail={activeStudent.email || ""}
       />
 
       {/* Main Content Area */}
       <main className="flex-grow p-8 overflow-y-auto">
         
-        {/* Top Header with Simulator Selector */}
-        <header className="flex justify-between items-center mb-8 border-b border-slate-200 pb-4 font-sans text-xs">
+        {/* Top Header */}
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-slate-200 pb-4 font-sans text-xs">
           <div>
             <h1 className="font-academic text-2xl font-black uppercase tracking-tight">Panel del Estudiante</h1>
             <p className="text-xs text-text-slate font-medium">Visualiza tus materias inscritas, tu avance académico y calificaciones.</p>
           </div>
 
-          {/* SIMULATOR SWITCHER */}
-          <div className="bg-white border border-slate-200 px-4 py-2 rounded-xl flex items-center gap-3 shadow-sm">
-            <span className="font-bold text-slate-500 uppercase tracking-wider text-[9px]">Simular Estudiante:</span>
-            <select
-              value={activeStudentId}
-              onChange={(e) => setActiveStudentId(e.target.value)}
-              className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold cursor-pointer text-primary focus:outline-none"
-            >
-              {students.map(s => (
-                <option key={s.id} value={s.id}>
-                  {s.nombre} ({s.estadoInscripcion})
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Multiple Course Switcher for Students */}
+          {studentCourses.length > 1 && (
+            <div className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-xs shrink-0">
+              <span className="font-bold text-slate-500 uppercase tracking-wider text-[9px]">Materia Activa:</span>
+              <select
+                value={activeCourseSlug}
+                onChange={(e) => setSelectedCourseSlug(e.target.value)}
+                className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-primary cursor-pointer focus:outline-none"
+              >
+                {studentCourses.map(c => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </header>
 
         {/* VIEW 1: MIS CURSOS / LIVE CLASS */}
@@ -137,8 +202,12 @@ export default function EstudianteDashboard() {
               {courseData && (
                 <div className="bg-white border border-slate-200 rounded-[32px_32px_32px_0px] p-6 shadow-sm space-y-6">
                   <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 bg-gradient-to-br ${courseData.gradient} text-white flex items-center justify-center rounded-xl font-bold select-none text-xl`}>
-                      {courseData.emoji}
+                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 relative">
+                      {courseData.coverUrl ? (
+                        <img src={courseData.coverUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <BookOpen className="w-5 h-5 text-primary" />
+                      )}
                     </div>
                     <div>
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Curso Inscrito</span>
@@ -194,46 +263,95 @@ export default function EstudianteDashboard() {
           </div>
         )}
 
+        {/* Materials Section - full width */}
+        {activeView === "cursos" && activeStudent.estadoInscripcion === "Aceptado" && materials.length > 0 && (
+          <div className="mt-8 max-w-4xl bg-white border border-slate-200 rounded-[32px_32px_32px_0px] p-6 shadow-sm space-y-4 font-sans text-xs">
+            <h3 className="text-base font-bold text-primary flex items-center gap-2">
+              <FileText className="w-4 h-4 text-accent" />
+              Materiales del curso
+            </h3>
+            <div className="divide-y divide-slate-100">
+              {materials.map((m: any) => (
+                <div key={m.id} className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    {m.type === "pdf" ? <FileText className="w-4 h-4 text-rose-500" /> :
+                     m.type === "video" ? <Video className="w-4 h-4 text-blue-500" /> :
+                     <Link2 className="w-4 h-4 text-emerald-500" />}
+                    <span className="font-bold text-primary">{m.title}</span>
+                  </div>
+                  <a href={m.url} target="_blank" rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-accent text-white rounded-lg text-[10px] font-bold uppercase hover:bg-primary transition-colors inline-flex items-center gap-1">
+                    Abrir <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* VIEW 2: AVANCE DE MODULOS */}
         {activeView === "temarios" && (
           <div className="max-w-4xl bg-white border border-slate-200 rounded-[32px_32px_32px_0px] p-8 shadow-sm space-y-6 font-sans">
             <div className="border-b border-slate-100 pb-4">
               <h3 className="text-lg font-bold text-primary">Temario de la Materia</h3>
               <p className="text-xs text-slate-500 font-medium">
-                Haz clic en las casillas conforme vayas completando cada tema para actualizar tu progreso acumulado en tiempo real.
+                Visualiza los módulos que componen este programa y el estado de avance asignado por tu docente.
               </p>
             </div>
 
             {courseData?.temario ? (
               <div className="space-y-4 text-xs">
-                {courseData.temario.map((modulo, i) => {
-                  // Calculate mock progress threshold to check if it's checked
-                  const stepPercent = Math.round(((i + 1) / courseData.temario!.length) * 100);
-                  const isChecked = activeStudent.progreso >= stepPercent;
+                {courseData.temario.map((modulo: any, i: number) => {
+                  let parsedFeedback = activeStudent.comentariosDocente || "";
+                  let parsedModuleGrades: any = {};
+                  try {
+                    if (activeStudent.comentariosDocente && activeStudent.comentariosDocente.startsWith("{")) {
+                      const parsed = JSON.parse(activeStudent.comentariosDocente);
+                      parsedModuleGrades = parsed.moduleGrades || {};
+                    }
+                  } catch (e) {}
+
+                  const mData = parsedModuleGrades[i];
+                  const isChecked = mData?.completed !== undefined 
+                    ? mData.completed 
+                    : activeStudent.progreso >= Math.round(((i + 1) / courseData.temario!.length) * 100);
 
                   return (
                     <div 
                       key={i} 
-                      onClick={() => handleToggleModule(i, courseData.temario!.length)}
-                      className={`flex items-start gap-4 p-4 rounded-2xl border transition-all cursor-pointer ${
+                      className={`flex items-start gap-4 p-4.5 rounded-2xl border transition-all ${
                         isChecked 
-                          ? "bg-emerald-50/40 border-emerald-100 text-emerald-900" 
-                          : "bg-slate-50 border-slate-200 hover:border-slate-300"
+                          ? "bg-emerald-50/50 border-emerald-200 text-emerald-950" 
+                          : "bg-slate-50 border-slate-200 text-slate-600"
                       }`}
                     >
-                      <button className="flex-shrink-0 mt-0.5">
+                      <div className="flex-shrink-0 mt-0.5">
                         {isChecked ? (
-                          <CheckSquare className="w-5 h-5 text-emerald-600 fill-current bg-white" />
+                          <CheckCircle className="w-5 h-5 text-emerald-600" />
                         ) : (
-                          <Square className="w-5 h-5 text-slate-400 bg-white rounded" />
+                          <Clock className="w-5 h-5 text-slate-400" />
                         )}
-                      </button>
+                      </div>
                       
-                      <div className="space-y-1">
-                        <span className={`text-[8px] font-bold uppercase tracking-wider ${isChecked ? "text-emerald-700" : "text-slate-400"}`}>
-                          Módulo {i + 1}
-                        </span>
-                        <h4 className="text-xs font-bold">{modulo}</h4>
+                      <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`text-[9px] font-bold uppercase tracking-wider ${isChecked ? "text-emerald-700" : "text-slate-400"}`}>
+                            Módulo {i + 1}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {mData?.score && (
+                              <span className="text-[9px] font-bold uppercase tracking-wider bg-accent/10 text-accent px-2.5 py-0.5 rounded-md">
+                                Nota: {mData.score}/100
+                              </span>
+                            )}
+                            <span className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md ${
+                              isChecked ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"
+                            }`}>
+                              {isChecked ? "Completado" : "En desarrollo"}
+                            </span>
+                          </div>
+                        </div>
+                        <h4 className="text-xs font-bold text-primary">{modulo.contenido || modulo}</h4>
                       </div>
                     </div>
                   );
@@ -267,6 +385,28 @@ export default function EstudianteDashboard() {
                   </div>
                 </div>
 
+                {/* Certificate Download Callout */}
+                {activeStudent.progreso >= 100 && (
+                  <div className="p-5 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl space-y-3 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shadow-sm">
+                        <Award className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-primary text-sm">Constancia Oficial Disponible</h4>
+                        <p className="text-[10px] text-slate-600 font-medium">¡Felicidades! Has completado el 100% de los módulos con calificación aprobatoria.</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowCertificateModal(true)}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-primary text-white text-xs font-bold uppercase tracking-wider rounded-xl cursor-pointer transition-colors shadow-sm"
+                    >
+                      <Award className="w-4 h-4" />
+                      Ver / Imprimir Constancia Oficial
+                    </button>
+                  </div>
+                )}
+
                 {/* Feedback */}
                 {activeStudent.comentariosDocente && (
                   <div className="space-y-2">
@@ -275,7 +415,17 @@ export default function EstudianteDashboard() {
                       Retroalimentación del Profesor:
                     </h4>
                     <p className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 italic leading-relaxed font-medium">
-                      "{activeStudent.comentariosDocente}"
+                      "{(() => {
+                        try {
+                          if (activeStudent.comentariosDocente.startsWith("{")) {
+                            const parsed = JSON.parse(activeStudent.comentariosDocente);
+                            if (parsed.feedback && parsed.feedback.trim()) return parsed.feedback;
+                            if (parsed.moduleGrades && Object.keys(parsed.moduleGrades).length > 0) return "Calificacion por modulos. Sin comentarios adicionales.";
+                            return "Sin comentarios del docente.";
+                          }
+                        } catch (e) {}
+                        return activeStudent.comentariosDocente;
+                      })()}"
                     </p>
                   </div>
                 )}
@@ -289,6 +439,126 @@ export default function EstudianteDashboard() {
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* VIEW PERFIL */}
+        {activeView === "perfil" && (
+          <div className="max-w-lg bg-white border border-slate-200 rounded-[32px_32px_32px_0px] p-8 shadow-sm space-y-6 font-sans text-xs">
+            <h3 className="text-lg font-bold text-primary border-l-4 border-accent pl-3">Editar Perfil</h3>
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block font-bold text-slate-600">Nombre</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                  <input type="text" value={profileForm.nombre} placeholder={activeStudent.nombre || "Tu nombre"}
+                    onChange={e => setProfileForm({ ...profileForm, nombre: e.target.value })}
+                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="block font-bold text-slate-600">Nueva contrasena (dejar vacio para no cambiar)</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                  <input type="password" value={profileForm.password} placeholder="Minimo 6 caracteres"
+                    onChange={e => setProfileForm({ ...profileForm, password: e.target.value })}
+                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+                </div>
+              </div>
+              {profileForm.password && (
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-slate-600">Confirmar contrasena</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                    <input type="password" value={profileForm.confirmPassword} placeholder="Repite la contrasena"
+                      onChange={e => setProfileForm({ ...profileForm, confirmPassword: e.target.value })}
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+                  </div>
+                </div>
+              )}
+              {profileMsg && (
+                <div className={`p-3 rounded-xl text-[11px] font-semibold ${profileMsg.includes("correctamente") ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+                  {profileMsg}
+                </div>
+              )}
+              <button type="submit"
+                className="w-full py-2.5 bg-accent text-white rounded-lg nicdark-btn-radius text-xs font-bold uppercase hover:bg-primary transition-colors cursor-pointer">
+                Guardar cambios
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* CERTIFICATE DIPLOMA MODAL */}
+        {showCertificateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in font-sans">
+            <div className="bg-white border border-slate-200 w-full max-w-3xl rounded-[32px] shadow-2xl p-8 sm:p-12 relative animate-scale-up text-primary overflow-hidden">
+              <button 
+                onClick={() => setShowCertificateModal(false)}
+                className="absolute top-6 right-6 text-slate-400 hover:text-primary transition-colors cursor-pointer print:hidden"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* Printable Certificate Layout */}
+              <div className="border-8 border-double border-primary/20 p-8 sm:p-10 rounded-2xl space-y-8 text-center relative bg-gradient-to-b from-white via-slate-50/50 to-white">
+                {/* Header Logo */}
+                <div className="space-y-2">
+                  <img src="/logo.webp" alt="IHDECA Programas" className="h-14 w-auto mx-auto object-contain" />
+                  <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-slate-400 block">Instituto de Habilidades y Desarrollo Académico</span>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <h2 className="font-academic text-2xl sm:text-3xl font-black text-primary uppercase tracking-widest">
+                    Constancia de Acreditación
+                  </h2>
+                  <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold">Se otorga el presente reconocimiento a:</p>
+                </div>
+
+                {/* Student Name */}
+                <div className="py-2 border-b-2 border-accent/40 max-w-md mx-auto">
+                  <h3 className="font-academic text-2xl sm:text-3xl font-bold text-primary">
+                    {activeStudent.nombre}
+                  </h3>
+                </div>
+
+                {/* Details */}
+                <p className="text-xs text-slate-600 max-w-lg mx-auto leading-relaxed font-medium">
+                  Por haber concluido satisfactoriamente con mención sobresaliente el programa de formación profesional en:
+                </p>
+
+                <h4 className="text-lg sm:text-xl font-bold text-accent uppercase tracking-wide">
+                  "{activeStudent.cursoTitle}"
+                </h4>
+
+                <div className="flex justify-around items-center pt-8 border-t border-slate-200 text-xs font-sans">
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Calificación Obtenida</span>
+                    <span className="text-base font-black text-emerald-600">{activeStudent.calificacion} / 100</span>
+                  </div>
+                  <div className="w-20 h-20 rounded-full border-2 border-amber-400/60 flex items-center justify-center p-1 bg-amber-50/50">
+                    <div className="w-full h-full rounded-full border border-dashed border-amber-500 flex items-center justify-center text-[8px] font-black uppercase text-amber-700 tracking-tighter text-center">
+                      SELLO OFICIAL IHDECA
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Fecha de Emisión</span>
+                    <span className="text-xs font-bold text-slate-700">{new Date().toLocaleDateString("es-MX", { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-6 flex justify-end gap-3 print:hidden">
+                <button
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-accent text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow cursor-pointer transition-colors"
+                >
+                  <Printer className="w-4 h-4" />
+                  Imprimir / Guardar en PDF
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

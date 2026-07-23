@@ -31,9 +31,20 @@ export default function CTAForm() {
   const [error, setError] = useState("");
   const [captcha, setCaptcha] = useState({ num1: 0, num2: 0, sum: 0 });
 
-  // Generate arithmetic captcha on component mount
+  const [courseList, setCourseList] = useState<any[]>(courses);
+
+  // Generate arithmetic captcha and fetch dynamic courses from DB
   useEffect(() => {
     generateCaptcha();
+
+    fetch("/api/courses")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setCourseList(data);
+        }
+      })
+      .catch(err => console.error("Error loading courses in CTAForm:", err));
   }, []);
 
   const generateCaptcha = () => {
@@ -53,13 +64,13 @@ export default function CTAForm() {
     });
 
     tl.fromTo(".cta-left-anim",
-      { x: -40, opacity: 0 },
-      { x: 0, opacity: 1, stagger: 0.15, duration: 0.8, ease: "power2.out" }
+      { x: -30, opacity: 0 },
+      { x: 0, opacity: 1, stagger: 0.12, duration: 0.8, ease: "power3.out" }
     );
 
     tl.fromTo(".cta-right-anim",
-      { x: 40, opacity: 0 },
-      { x: 0, opacity: 1, duration: 0.8, ease: "power2.out" },
+      { x: 30, opacity: 0 },
+      { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
       "-=0.6"
     );
 
@@ -73,7 +84,7 @@ export default function CTAForm() {
     };
   }, { scope: containerRef });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nombre || !form.telefono || !form.email || !form.curso || !form.mensaje) {
       setError("Por favor, completa los campos requeridos.");
@@ -93,8 +104,25 @@ export default function CTAForm() {
     setError("");
     setLoading(true);
 
-    // Simulate API Response
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: form.nombre,
+          telefono: form.telefono,
+          email: form.email,
+          curso: form.curso,
+          empresa: form.empresa,
+          mensaje: form.mensaje
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Error al enviar la solicitud");
+      }
+
       setLoading(false);
       setSuccess(true);
       setForm({
@@ -108,7 +136,10 @@ export default function CTAForm() {
         captchaAnswer: "",
       });
       generateCaptcha();
-    }, 1200);
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || "No se pudo enviar la solicitud. Intenta de nuevo.");
+    }
   };
 
   return (
@@ -271,7 +302,7 @@ export default function CTAForm() {
                       className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent focus:bg-white transition-all font-sans cursor-pointer text-slate-800"
                     >
                       <option value="" disabled className="text-slate-400">Selecciona una opción</option>
-                      {courses.map((c) => (
+                      {courseList.map((c: any) => (
                         <option key={c.slug} value={c.title} className="text-slate-800">
                           {c.title}
                         </option>

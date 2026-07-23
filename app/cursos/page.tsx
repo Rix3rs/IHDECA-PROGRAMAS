@@ -2,34 +2,59 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Clock, BookOpen, Star, SlidersHorizontal, Eye } from "lucide-react";
+import { Search, Clock, BookOpen, Star, SlidersHorizontal, Eye, CheckCircle2, Loader2 } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
-import { courses as staticCourses, categories, Course } from "@/app/data/courses";
+import { courses as staticCourses, categories as staticCategories, Course } from "@/app/data/courses";
+import { usePurchasedCourses } from "@/app/hooks/usePurchasedCourses";
 
 export default function CursosPage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedModalidad, setSelectedModalidad] = useState("all");
-  const [coursesList, setCoursesList] = useState<Course[]>(staticCourses);
+  const [priceSort, setPriceSort] = useState("default");
+  const [coursesList, setCoursesList] = useState<Course[]>([]);
+  const [categories, setCategories] = useState<any[]>(staticCategories);
+  const { hasPurchased } = usePurchasedCourses();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("ihdeca_courses");
-      if (saved) {
-        setCoursesList(JSON.parse(saved));
-      }
-    }
+    fetch("/api/courses")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCoursesList(data);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Error loading courses:", err);
+        setLoading(false);
+      });
+
+    fetch("/api/categories")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setCategories(data);
+        }
+      })
+      .catch(err => console.error("Error loading categories:", err));
   }, []);
 
   // Dynamic filter logic
   const filteredCourses = coursesList.filter((course) => {
+    const isPublished = course.publicado !== false;
     const matchesSearch = course.title.toLowerCase().includes(search.toLowerCase()) || 
                           course.description.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = selectedCategory === "all" || course.categorySlug === selectedCategory;
     const matchesModalidad = selectedModalidad === "all" || course.modalidad.toLowerCase() === selectedModalidad.toLowerCase();
 
-    return matchesSearch && matchesCategory && matchesModalidad;
+    return isPublished && matchesSearch && matchesCategory && matchesModalidad;
+  }).sort((a, b) => {
+    if (priceSort === "asc") return (a.precioMxn || 0) - (b.precioMxn || 0);
+    if (priceSort === "desc") return (b.precioMxn || 0) - (a.precioMxn || 0);
+    return 0;
   });
 
   return (
@@ -103,20 +128,15 @@ export default function CursosPage() {
                   <option value="en línea">En línea</option>
                 </select>
 
-                {/* Area filter placeholder */}
+                {/* Price sort */}
                 <select
-                  disabled
-                  className="px-4 py-2.5 bg-white/70 border border-slate-200 rounded-xl text-xs font-sans cursor-not-allowed text-slate-400 shadow-sm"
+                  value={priceSort}
+                  onChange={(e) => setPriceSort(e.target.value)}
+                  className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-sans cursor-pointer focus:outline-none focus:ring-1 focus:ring-accent shadow-sm"
                 >
-                  <option>Área de formación (Por definir)</option>
-                </select>
-
-                {/* Price filter placeholder */}
-                <select
-                  disabled
-                  className="px-4 py-2.5 bg-white/70 border border-slate-200 rounded-xl text-xs font-sans cursor-not-allowed text-slate-400 shadow-sm"
-                >
-                  <option>Precio (Por confirmar)</option>
+                  <option value="default">Ordenar por precio</option>
+                  <option value="asc">Menor a mayor</option>
+                  <option value="desc">Mayor a menor</option>
                 </select>
               </div>
 
@@ -127,19 +147,36 @@ export default function CursosPage() {
         {/* Catalog Grid Section */}
         <section className="py-20 bg-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {filteredCourses.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
+                <p className="text-sm text-slate-500 mt-4">Cargando cursos...</p>
+              </div>
+            ) : filteredCourses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {filteredCourses.map((course) => (
                   <div
                     key={course.slug}
                     className="group flex flex-col nicdark-card overflow-hidden transition-[box-shadow,border-color] duration-300"
                   >
-                    {/* Gradient Header */}
-                    <div className={`relative h-40 w-full bg-gradient-to-br ${course.gradient} flex items-center justify-center p-6 text-white`}>
-                      <span className="text-5xl transform transition-transform duration-500 group-hover:scale-110 select-none">
-                        {course.emoji}
-                      </span>
-                      <div className="absolute top-4 left-4 bg-white text-primary font-bold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-md border border-slate-100 shadow-sm">
+                    {/* Cover Header */}
+                    <div className="relative h-40 w-full overflow-hidden flex items-center justify-center text-white bg-slate-100">
+                      {course.coverUrl ? (
+                        <img
+                          src={course.coverUrl}
+                          alt={course.coverAlt || course.title}
+                          style={{ objectPosition: `center ${course.coverPositionY !== undefined ? course.coverPositionY : 50}%` }}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <>
+                          <div className={`absolute inset-0 bg-gradient-to-br ${course.gradient}`} />
+                          <div className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center relative z-10 transition-transform duration-500 group-hover:scale-110">
+                            <BookOpen className="w-7 h-7 text-white/90" />
+                          </div>
+                        </>
+                      )}
+                      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm text-primary font-bold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-md border border-slate-100 shadow-sm z-10">
                         {course.category}
                       </div>
                     </div>
@@ -185,16 +222,37 @@ export default function CursosPage() {
                       {/* Footer */}
                       <div className="flex items-center justify-between pt-4 mt-auto border-t border-slate-100 font-sans">
                         <span className="text-sm font-bold text-primary leading-none">
-                          {course.price}
+                          {course.precioMxn
+                            ? new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(course.precioMxn)
+                            : course.price}
                         </span>
                         
-                        <Link
-                          href={`/cursos/${course.slug}`}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 border border-accent text-accent hover:bg-accent hover:text-white uppercase tracking-wider text-[9px] font-bold rounded-lg transition-all duration-300 cursor-pointer shadow-sm"
-                        >
-                          <Eye className="w-3 h-3" />
-                          Ver curso
-                        </Link>
+                        <div className="flex items-center gap-1.5">
+                          {hasPurchased(course.slug) ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold rounded-lg">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Ya inscrito
+                            </span>
+                          ) : (
+                            <>
+                              <Link
+                                href={`/cursos/${course.slug}`}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 border border-accent text-accent hover:bg-accent hover:text-white uppercase tracking-wider text-[9px] font-bold rounded-lg transition-all duration-300 cursor-pointer shadow-sm"
+                              >
+                                <Eye className="w-3 h-3" />
+                                Ver curso
+                              </Link>
+                              {course.precioMxn && (
+                                <Link
+                                  href={`/cursos/${course.slug}/pago`}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-accent text-white hover:bg-primary uppercase tracking-wider text-[9px] font-bold rounded-lg nicdark-btn-radius transition-all duration-300 cursor-pointer shadow-sm"
+                                >
+                                  Pagar
+                                </Link>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
