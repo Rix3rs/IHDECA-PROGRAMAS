@@ -6,25 +6,49 @@ import { useParams } from "next/navigation";
 import { Clock, BookOpen, Star, ArrowLeft, Eye } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
-import { courses as staticCourses, categories, Course } from "@/app/data/courses";
+import { courses as staticCourses, Course } from "@/app/data/courses";
 
 export default function CategoryPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const category = categories.find((c) => c.slug === slug);
+  const [category, setCategory] = useState<any>(null);
   const [categoryCourses, setCategoryCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    fetch("/api/categories")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const found = data.find((c: any) => c.slug === slug);
+          setCategory(found || null);
+        }
+      })
+      .catch(() => {});
+
     fetch("/api/courses")
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setCategoryCourses(data.filter((c) => c.categorySlug === slug && c.publicado !== false));
+          setCategoryCourses(data.filter((c: any) => c.categorySlug === slug && c.publicado !== false));
         }
+        setLoading(false);
       })
-      .catch(err => console.error("Error loading courses:", err));
+      .catch(() => setLoading(false));
   }, [slug]);
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <main className="flex-grow pt-32 pb-24 text-center">
+          <p className="text-sm text-slate-400">Cargando...</p>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   if (!category) {
     return (
