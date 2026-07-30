@@ -26,17 +26,18 @@ async function main() {
   });
 
   if (existingUser) {
-    if (existingUser.rol === "ADMIN") {
-      console.log(`El usuario con correo ${cleanEmail} ya existe y ya es un administrador.`);
-    } else {
-      console.log(`El usuario con correo ${cleanEmail} ya existe con el rol "${existingUser.rol}".`);
-      console.log("Actualizando su rol a administrador...");
-      await prisma.user.update({
-        where: { id: existingUser.id },
-        data: { rol: "ADMIN" }
-      });
-      console.log("¡Rol actualizado a ADMIN con éxito!");
-    }
+    console.log(`El usuario con correo ${cleanEmail} ya existe.`);
+    console.log("Actualizando contraseña y asegurando rol de administrador...");
+    const hashedPassword = bcrypt.hashSync(contrasena, 10);
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        rol: "ADMIN",
+        contrasena: hashedPassword,
+        nombre: nombre
+      }
+    });
+    console.log("¡Usuario actualizado a ADMIN y contraseña modificada con éxito!");
     return;
   }
 
