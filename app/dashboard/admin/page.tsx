@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Check, UserCheck, AlertCircle, X, HelpCircle, FileText, Trash2, Edit2, UserCog, BookOpen, Download, Inbox, Mail, Key, RefreshCw, Search, Tags } from "lucide-react";
+import { Plus, Check, UserCheck, AlertCircle, X, HelpCircle, FileText, Trash2, Edit2, UserCog, BookOpen, Download, Inbox, Mail, Key, RefreshCw, Search, Tags, Menu } from "lucide-react";
 import Sidebar from "@/app/dashboard/components/Sidebar";
 import NotificationBell from "@/app/dashboard/components/NotificationBell";
 import { initialStudents, MockStudent, initialTeachers, MockTeacher } from "@/app/data/dashboardData";
@@ -24,6 +24,7 @@ export default function AdminDashboard() {
   const [categories, setCategories] = useState<any[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [metrics, setMetrics] = useState<Metrics>({
     ingresosMensuales: "$0 MXN",
     alumnosActivos: 0,
@@ -678,14 +679,25 @@ export default function AdminDashboard() {
         onViewChange={setActiveView}
         userName="Admin IHDECA"
         userEmail="admin@ihdecaprogramas.com.mx"
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
       />
 
       {/* Main Content Area */}
-      <main className="flex-grow p-8 overflow-y-auto">
+      <main className="flex-grow p-4 sm:p-8 overflow-y-auto max-w-full">
         <header className="flex justify-between items-center mb-8 border-b border-slate-200 pb-4">
-          <div>
-            <h1 className="font-academic text-2xl font-black uppercase tracking-tight">Panel del Administrador</h1>
-            <p className="text-xs text-text-slate font-medium">Gestión de operaciones, inscripciones y catálogo educativo.</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden p-2 -ml-2 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+              aria-label="Abrir menu"
+            >
+              <Menu className="w-5 h-5 text-primary" />
+            </button>
+            <div>
+              <h1 className="font-academic text-xl sm:text-2xl font-black uppercase tracking-tight">Panel del Administrador</h1>
+              <p className="text-[10px] sm:text-xs text-text-slate font-medium">Gestión de operaciones, inscripciones y catálogo educativo.</p>
+            </div>
           </div>
           <NotificationBell />
         </header>
@@ -694,7 +706,7 @@ export default function AdminDashboard() {
         {activeView === "resumen" && (
           <div className="space-y-8">
             {/* Statistics Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
               
               {/* Earnings card */}
               <div className="bg-white border border-slate-200 rounded-[24px_24px_24px_0px] p-6 shadow-sm flex items-center gap-4">

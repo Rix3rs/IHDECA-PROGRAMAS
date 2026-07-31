@@ -27,9 +27,11 @@ interface SidebarProps {
   onViewChange: (view: string) => void;
   userName: string;
   userEmail: string;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
-export default function Sidebar({ role, activeView, onViewChange, userName, userEmail }: SidebarProps) {
+export default function Sidebar({ role, activeView, onViewChange, userName, userEmail, mobileOpen, onCloseMobile }: SidebarProps) {
   const router = useRouter();
 
   const getRoleLabel = () => {
@@ -76,7 +78,11 @@ export default function Sidebar({ role, activeView, onViewChange, userName, user
   const currentMenu = menuItems[role];
 
   return (
-    <aside className="w-64 min-w-64 flex-shrink-0 bg-primary text-white flex flex-col justify-between border-r border-white/10 h-screen sticky top-0 font-sans z-30 select-none">
+    <>
+      {mobileOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onCloseMobile} />}
+      <aside className={`w-64 min-w-64 flex-shrink-0 bg-primary text-white flex flex-col justify-between border-r border-white/10 h-screen sticky top-0 font-sans z-30 select-none
+        ${mobileOpen !== undefined ? "fixed inset-y-0 left-0 z-50 transition-transform lg:static lg:translate-x-0 " + (mobileOpen ? "translate-x-0" : "-translate-x-full") : ""}
+        max-lg:${mobileOpen !== undefined ? "" : "hidden"} lg:flex`}>
       
       {/* Upper Section */}
       <div className="flex flex-col space-y-8 pt-8 px-6">
@@ -148,5 +154,6 @@ export default function Sidebar({ role, activeView, onViewChange, userName, user
       </div>
 
     </aside>
+    </>
   );
 }

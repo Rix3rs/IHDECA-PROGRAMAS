@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { BookOpen, Award, CheckCircle, ExternalLink, Calendar, AlertTriangle, Clock, Printer, Download, X, User, Lock, FileText, Link2, Video } from "lucide-react";
+import { BookOpen, Award, CheckCircle, ExternalLink, Calendar, AlertTriangle, Clock, Printer, Download, X, User, Lock, FileText, Link2, Video, Menu } from "lucide-react";
 import Sidebar from "@/app/dashboard/components/Sidebar";
 import { initialStudents, initialTeachers, MockStudent } from "@/app/data/dashboardData";
 import { courses } from "@/app/data/courses";
@@ -14,6 +14,7 @@ export default function EstudianteDashboard() {
   const [activeStudentId, setActiveStudentId] = useState<string>("");
   const [zoomLink, setZoomLink] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileForm, setProfileForm] = useState({ nombre: "", password: "", confirmPassword: "" });
@@ -137,16 +138,27 @@ export default function EstudianteDashboard() {
         onViewChange={setActiveView}
         userName={activeStudent.nombre || "Estudiante"}
         userEmail={activeStudent.email || ""}
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
       />
 
       {/* Main Content Area */}
-      <main className="flex-grow p-8 overflow-y-auto">
+      <main className="flex-grow p-4 sm:p-8 overflow-y-auto max-w-full">
         
         {/* Top Header */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-slate-200 pb-4 font-sans text-xs">
-          <div>
-            <h1 className="font-academic text-2xl font-black uppercase tracking-tight">Panel del Estudiante</h1>
-            <p className="text-xs text-text-slate font-medium">Visualiza tus materias inscritas, tu avance académico y calificaciones.</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden p-2 -ml-2 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+              aria-label="Abrir menu"
+            >
+              <Menu className="w-5 h-5 text-primary" />
+            </button>
+            <div>
+              <h1 className="font-academic text-xl sm:text-2xl font-black uppercase tracking-tight">Panel del Estudiante</h1>
+              <p className="text-[10px] sm:text-xs text-text-slate font-medium">Visualiza tus materias inscritas, tu avance académico y calificaciones.</p>
+            </div>
           </div>
 
           {/* Multiple Course Switcher for Students */}
