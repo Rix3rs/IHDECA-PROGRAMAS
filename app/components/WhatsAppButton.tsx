@@ -26,8 +26,8 @@ export default function WhatsAppButton() {
       setShowMobileTooltip(true);
       setTimeout(() => {
         setShowMobileTooltip(false);
-      }, 3500);
-    }, 6500);
+      }, 3000);
+    }, 60000);
 
     // Initial delay trigger for mobile
     const initialTimer = setTimeout(() => {
