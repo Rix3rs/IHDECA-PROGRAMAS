@@ -14,7 +14,7 @@ export default function WhatsAppButton() {
     const handleScroll = () => {
       const scrollBottom = window.innerHeight + window.scrollY;
       const docHeight = document.documentElement.scrollHeight;
-      setNearFooter(docHeight - scrollBottom < 200);
+      setNearFooter(docHeight - scrollBottom < 80);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);

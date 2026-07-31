@@ -822,7 +822,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Courses Table */}
-            <div className="bg-white border border-slate-200 rounded-[24px_24px_24px_0px] overflow-hidden shadow-sm">
+             <div className="bg-white border border-slate-200 rounded-[24px_24px_24px_0px] overflow-hidden shadow-sm overflow-x-auto">
               <table className="w-full text-left font-sans text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 text-slate-500 border-b border-slate-200 font-bold uppercase tracking-wider text-[9px]">
