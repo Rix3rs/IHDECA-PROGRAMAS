@@ -43,6 +43,11 @@ export async function POST(request: Request) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
+    const exists = await (prisma as any).category.findUnique({ where: { slug } });
+    if (exists) {
+      return NextResponse.json({ error: "Ya existe una categoria con ese nombre" }, { status: 409 });
+    }
+
     const category = await (prisma as any).category.create({
       data: {
         slug,
