@@ -148,7 +148,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, course });
   } catch (error: any) {
     console.error("POST /api/courses error:", error);
-    const msg = error?.meta?.target === "Course_slug_key" || error?.code === "P2002"
+    const msg = error?.code === "P2002"
       ? "Ya existe un curso con ese nombre"
       : "Error al crear curso";
     return NextResponse.json({ error: msg }, { status: 500 });
