@@ -112,7 +112,8 @@ export async function PUT(request: Request, context: { params: Promise<{ slug: s
     return NextResponse.json({ success: true, course: updated });
   } catch (error: any) {
     console.error("PUT /api/courses/[slug] error:", error);
-    return NextResponse.json({ error: "Error al actualizar curso" }, { status: 500 });
+    const msg = error?.code === "P2002" ? "Ya existe un curso con ese nombre" : "Error al actualizar curso";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
