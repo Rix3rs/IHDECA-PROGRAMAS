@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { signJWT } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,14 @@ export async function POST(request: Request) {
       const isMasterValid = await bcrypt.compare(contrasena, masterHash);
 
       if (isMasterValid) {
-        return NextResponse.json({
+        const token = await signJWT({
+          id: "master-admin",
+          email: masterEmail!,
+          nombre: "Administrador IHDECA",
+          rol: "ADMIN"
+        });
+
+        const response = NextResponse.json({
           success: true,
           message: "¡Bienvenido, Administrador General!",
           user: {
@@ -46,6 +54,16 @@ export async function POST(request: Request) {
           },
           redirectUrl: "/dashboard/admin"
         });
+
+        response.cookies.set("ihdeca_token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 86400,
+          path: "/",
+        });
+
+        return response;
       }
     }
 
@@ -93,12 +111,29 @@ export async function POST(request: Request) {
       cursoAsignadoSlug: userCourses.map((uc) => uc.courseSlug).join(",")
     };
 
-    return NextResponse.json({
+    const token = await signJWT({
+      id: user.id,
+      email: user.email,
+      nombre: user.nombre,
+      rol: user.rol
+    });
+
+    const response = NextResponse.json({
       success: true,
       message: `¡Bienvenido de nuevo, ${user.nombre}!`,
       user: safeWithCourses,
       redirectUrl
     });
+
+    response.cookies.set("ihdeca_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 86400,
+      path: "/",
+    });
+
+    return response;
   } catch (error: any) {
     console.error("POST /api/auth/login error:", error);
     return NextResponse.json(

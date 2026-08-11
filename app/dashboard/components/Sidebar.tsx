@@ -101,7 +101,11 @@ export default function Sidebar({ role, activeView, onViewChange, userName, user
       </div>
 
       <div className="p-6 border-t border-white/10">
-        <button onClick={() => { localStorage.removeItem("ihdeca_user"); router.push("/"); }}
+        <button onClick={() => { 
+          fetch("/api/auth/logout", { method: "POST" });
+          localStorage.removeItem("ihdeca_user"); 
+          router.push("/"); 
+        }}
           className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider text-rose-300 hover:bg-rose-500/10 hover:text-rose-400 rounded-xl transition-all cursor-pointer">
           <LogOut className="w-4 h-4 flex-shrink-0" />Cerrar sesión
         </button>
