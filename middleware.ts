@@ -5,7 +5,7 @@ import { verifyJWT } from "@/lib/auth";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/dashboard")) {
+  if (pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/_")) {
     const token = request.cookies.get("ihdeca_token")?.value;
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));
@@ -13,7 +13,9 @@ export async function middleware(request: NextRequest) {
 
     const payload = await verifyJWT(token);
     if (!payload) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      const response = NextResponse.redirect(new URL("/login", request.url));
+      response.cookies.set("ihdeca_token", "", { maxAge: 0, path: "/" });
+      return response;
     }
 
     const roleRoutes: Record<string, string> = {
