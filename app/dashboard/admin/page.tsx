@@ -183,11 +183,15 @@ export default function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(categoryForm)
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: any = {};
+      try { data = JSON.parse(text); } catch { alert("Error de conexion. Intenta de nuevo."); return; }
       if (res.ok && data.success) {
         setCategories(prev => [...prev, data.category]);
         setIsCategoryModalOpen(false);
         setCategoryForm({ name: "", description: "", iconName: "BookOpen", color: "bg-blue-50/70", textColor: "text-blue-600", borderColor: "border-blue-100", imageUrl: "" });
+      } else {
+        alert(data.error || "Error al crear la categoria");
       }
     } catch (err) {
       console.error("Error creating category:", err);
