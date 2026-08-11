@@ -444,8 +444,10 @@ export default function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newUserForm)
       });
-      const data = await res.json();
-      if (res.ok) {
+      const text = await res.text();
+      let data: any = {};
+      try { data = JSON.parse(text); } catch { throw new Error("Error de conexion. Intenta de nuevo."); }
+      if (res.ok && data.success) {
         const usersRes = await fetch("/api/users");
         const usersData = await usersRes.json();
         if (Array.isArray(usersData)) {
@@ -538,7 +540,9 @@ export default function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(createdCourse)
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: any = {};
+      try { data = JSON.parse(text); } catch { throw new Error("Error de conexion con el servidor. Intenta de nuevo."); }
       if (res.ok && data.success) {
         const coursesRes = await fetch("/api/courses");
         const coursesData = await coursesRes.json();
@@ -632,7 +636,9 @@ export default function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(courseToUpdate)
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: any = {};
+      try { data = JSON.parse(text); } catch { throw new Error("Error de conexion. Intenta de nuevo."); }
       if (res.ok && data.success) {
         const coursesRes = await fetch("/api/courses");
         const coursesData = await coursesRes.json();
