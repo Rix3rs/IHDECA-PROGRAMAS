@@ -3,13 +3,30 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendEmail, templateNuevaCalificacion, templateBienvenidaDocente } from "@/lib/email";
+import { requireSession } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const auth = await requireSession(["ADMIN", "TEACHER", "STUDENT"]);
+  if (auth.error) return auth.error;
   try {
     const courses = await prisma.course.findMany();
+    const teacherAssignments = auth.session.rol === "TEACHER"
+      ? await prisma.userCourse.findMany({ where: { userId: auth.session.id }, select: { courseSlug: true } })
+      : [];
+    const allowedCourseSlugs = teacherAssignments.map((item) => item.courseSlug);
     const users = await prisma.user.findMany({
+      where: auth.session.rol === "ADMIN"
+        ? undefined
+        : auth.session.rol === "STUDENT"
+          ? { id: auth.session.id }
+          : {
+              OR: [
+                { id: auth.session.id },
+                { rol: "STUDENT", cursos: { some: { courseSlug: { in: allowedCourseSlugs } } } }
+              ]
+            },
       orderBy: {
         nombre: "asc"
       }
@@ -60,6 +77,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const body = await request.json();
     const {
@@ -116,7 +135,8 @@ export async function POST(request: Request) {
       } catch {}
     }
 
-    return NextResponse.json({ success: true, user: newUser });
+    const { contrasena: _password, ...safeUser } = newUser;
+    return NextResponse.json({ success: true, user: safeUser });
   } catch (error: any) {
     console.error("POST /api/users error:", error);
     return NextResponse.json({ error: "Error al crear usuario" }, { status: 500 });
@@ -124,6 +144,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const auth = await requireSession(["ADMIN", "TEACHER", "STUDENT"]);
+  if (auth.error) return auth.error;
   try {
     const body = await request.json();
     const {
@@ -141,6 +163,41 @@ export async function PUT(request: Request) {
       fechaRegistro,
       empresa
     } = body;
+
+    if (!id) return NextResponse.json({ error: "ID de usuario requerido" }, { status: 400 });
+
+    if (auth.session.rol === "STUDENT") {
+      if (id !== auth.session.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      const allowed = new Set(["id", "nombre", "contrasena"]);
+      if (Object.keys(body).some((key) => !allowed.has(key))) {
+        return NextResponse.json({ error: "No puedes modificar esos campos" }, { status: 403 });
+      }
+    }
+
+    if (auth.session.rol === "TEACHER") {
+      if (id === auth.session.id) {
+        const allowed = new Set(["id", "nombre", "contrasena", "zoomLink"]);
+        if (Object.keys(body).some((key) => !allowed.has(key))) {
+          return NextResponse.json({ error: "No puedes modificar esos campos" }, { status: 403 });
+        }
+      } else {
+        const allowed = new Set(["id", "calificacion", "comentariosDocente", "progreso"]);
+        if (Object.keys(body).some((key) => !allowed.has(key))) {
+          return NextResponse.json({ error: "No puedes modificar esos campos" }, { status: 403 });
+        }
+        const teacherCourses = await prisma.userCourse.findMany({
+          where: { userId: auth.session.id }, select: { courseSlug: true }
+        });
+        const target = await prisma.user.findFirst({
+          where: {
+            id,
+            rol: "STUDENT",
+            cursos: { some: { courseSlug: { in: teacherCourses.map((item) => item.courseSlug) } } }
+          }
+        });
+        if (!target) return NextResponse.json({ error: "No tienes acceso a este estudiante" }, { status: 403 });
+      }
+    }
 
     const updateData: any = {};
     if (nombre !== undefined) updateData.nombre = nombre;
@@ -200,7 +257,8 @@ export async function PUT(request: Request) {
       } catch {}
     }
 
-    return NextResponse.json({ success: true, user: updated });
+    const { contrasena: _password, ...safeUser } = updated;
+    return NextResponse.json({ success: true, user: safeUser });
   } catch (error: any) {
     console.error("PUT /api/users error:", error);
     return NextResponse.json({ error: "Error al actualizar usuario" }, { status: 500 });
@@ -208,6 +266,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

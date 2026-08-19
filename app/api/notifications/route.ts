@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireSession } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const notifications = await (prisma as any).notification.findMany({
       orderBy: { createdAt: "desc" },
@@ -22,6 +25,8 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const body = await request.json();
     const { id, readAll } = body;

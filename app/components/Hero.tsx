@@ -14,7 +14,7 @@ export default function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    let mm = gsap.matchMedia();
+    const mm = gsap.matchMedia();
 
     // DESKTOP ANIMATION (lg and up)
     mm.add("(min-width: 1024px)", () => {

@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
         response.cookies.set("ihdeca_token", token, {
           httpOnly: true,
-          secure: false,
+          secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
           maxAge: 86400,
           path: "/",

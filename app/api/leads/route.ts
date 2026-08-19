@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
+import { requireSession } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/leads - List all leads for Admin Dashboard
 export async function GET() {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const leads = await prisma.lead.findMany({
       orderBy: {
@@ -53,6 +56,8 @@ export async function POST(request: Request) {
 
 // PATCH /api/leads - Update lead status
 export async function PATCH(request: Request) {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const body = await request.json();
     const { id, estado } = body;
@@ -75,6 +80,8 @@ export async function PATCH(request: Request) {
 
 // DELETE /api/leads - Delete a lead by id
 export async function DELETE(request: Request) {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

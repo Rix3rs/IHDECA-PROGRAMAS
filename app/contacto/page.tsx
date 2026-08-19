@@ -39,12 +39,12 @@ export default function ContactoPage() {
       .catch(err => console.error("Error loading courses in ContactoPage:", err));
   }, []);
 
-  const generateCaptcha = () => {
+  function generateCaptcha() {
     const num1 = Math.floor(Math.random() * 9) + 1;
     const num2 = Math.floor(Math.random() * 9) + 1;
     setCaptcha({ num1, num2, sum: num1 + num2 });
     setForm(prev => ({ ...prev, captchaAnswer: "" }));
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

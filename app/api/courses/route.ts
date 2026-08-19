@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getSession, requireSession } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    const session = await getSession();
     const courses = await prisma.course.findMany({
+      where: session ? undefined : { publicado: true },
       include: {
         temario: true
       },
@@ -73,6 +76,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const body = await request.json();
     const {

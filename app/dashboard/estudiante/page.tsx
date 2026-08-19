@@ -314,7 +314,7 @@ export default function EstudianteDashboard() {
             {courseData?.temario ? (
               <div className="space-y-4 text-xs">
                 {courseData.temario.map((modulo: any, i: number) => {
-                  let parsedFeedback = activeStudent.comentariosDocente || "";
+                  const parsedFeedback = activeStudent.comentariosDocente || "";
                   let parsedModuleGrades: any = {};
                   try {
                     if (activeStudent.comentariosDocente && activeStudent.comentariosDocente.startsWith("{")) {

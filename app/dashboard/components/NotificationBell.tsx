@@ -17,6 +17,7 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState<number | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   const refetch = () => {
@@ -32,6 +33,7 @@ export default function NotificationBell() {
   };
 
   useEffect(() => {
+    setCurrentTime(Date.now());
     refetch();
     const interval = setInterval(refetch, 15000);
     return () => clearInterval(interval);
@@ -79,7 +81,8 @@ export default function NotificationBell() {
   };
 
   const timeAgo = (date: string) => {
-    const diff = Date.now() - new Date(date).getTime();
+    if (currentTime === null) return "";
+    const diff = currentTime - new Date(date).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 60) return `Hace ${mins}m`;
     const hours = Math.floor(mins / 60);

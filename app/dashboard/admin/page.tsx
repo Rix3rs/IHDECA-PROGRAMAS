@@ -15,6 +15,59 @@ interface Metrics {
   pagosDelMes: number;
 }
 
+const MAX_COVER_UPLOAD_BYTES = 900 * 1024;
+const ALLOWED_COVER_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+async function prepareCoverImage(file: File): Promise<File> {
+  if (!ALLOWED_COVER_TYPES.has(file.type)) {
+    throw new Error("La portada debe ser una imagen JPG, PNG o WebP.");
+  }
+
+  if (file.size <= MAX_COVER_UPLOAD_BYTES) return file;
+
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 1600 / bitmap.width, 1000 / bitmap.height);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    bitmap.close();
+    throw new Error("No se pudo preparar la imagen seleccionada.");
+  }
+
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  let quality = 0.86;
+  let blob: Blob | null = null;
+  while (quality >= 0.5) {
+    blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+    if (blob && blob.size <= MAX_COVER_UPLOAD_BYTES) break;
+    quality -= 0.08;
+  }
+
+  if (!blob || blob.size > MAX_COVER_UPLOAD_BYTES) {
+    throw new Error("La imagen es demasiado grande. Usa una portada menor a 1 MB.");
+  }
+
+  const baseName = file.name.replace(/\.[^.]+$/, "");
+  return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
+}
+
+async function readApiResponse(response: Response): Promise<Record<string, unknown>> {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    if (response.status === 413) {
+      throw new Error("La imagen o los datos enviados son demasiado grandes.");
+    }
+    throw new Error(`El servidor respondió con un error HTTP ${response.status}.`);
+  }
+
+  return response.json() as Promise<Record<string, unknown>>;
+}
+
 export default function AdminDashboard() {
   const [activeView, setActiveView] = useState("resumen");
   const [students, setStudents] = useState<MockStudent[]>([]);
@@ -260,34 +313,26 @@ export default function AdminDashboard() {
     if (!file) return;
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
 
     try {
+      const preparedFile = await prepareCoverImage(file);
+      const formData = new FormData();
+      formData.append("file", preparedFile);
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData
       });
-      const data = await res.json();
+      const data = await readApiResponse(res);
       
-      if (res.ok && data.success && data.url) {
-        setNewCourse(prev => ({ ...prev, coverUrl: data.url }));
+      if (res.ok && data.success === true && typeof data.url === "string") {
+        setNewCourse(prev => ({ ...prev, coverUrl: data.url as string }));
       } else {
-        // Fallback to base64 for demo purposes
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setNewCourse(prev => ({ ...prev, coverUrl: reader.result as string }));
-        };
-        reader.readAsDataURL(file);
+        throw new Error(typeof data.message === "string" ? data.message : "No se pudo subir la imagen.");
       }
-    } catch (err) {
-      // Fallback to base64
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewCourse(prev => ({ ...prev, coverUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-      console.warn("R2 Upload error, using base64 fallback:", err);
+    } catch (err: unknown) {
+      console.error("Error uploading course cover:", err);
+      alert(err instanceof Error ? err.message : "No se pudo subir la imagen.");
+      e.target.value = "";
     } finally {
       setUploading(false);
     }
@@ -298,32 +343,26 @@ export default function AdminDashboard() {
     if (!file) return;
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
 
     try {
+      const preparedFile = await prepareCoverImage(file);
+      const formData = new FormData();
+      formData.append("file", preparedFile);
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData
       });
-      const data = await res.json();
+      const data = await readApiResponse(res);
       
-      if (res.ok && data.success && data.url) {
-        setEditCourseForm(prev => ({ ...prev, coverUrl: data.url }));
+      if (res.ok && data.success === true && typeof data.url === "string") {
+        setEditCourseForm(prev => ({ ...prev, coverUrl: data.url as string }));
       } else {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setEditCourseForm(prev => ({ ...prev, coverUrl: reader.result as string }));
-        };
-        reader.readAsDataURL(file);
+        throw new Error(typeof data.message === "string" ? data.message : "No se pudo subir la imagen.");
       }
-    } catch (err) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditCourseForm(prev => ({ ...prev, coverUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-      console.warn("R2 Upload error during edit, using base64 fallback:", err);
+    } catch (err: unknown) {
+      console.error("Error uploading course cover during edit:", err);
+      alert(err instanceof Error ? err.message : "No se pudo subir la imagen.");
+      e.target.value = "";
     } finally {
       setUploading(false);
     }
@@ -448,9 +487,7 @@ export default function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newUserForm)
       });
-      const text = await res.text();
-      let data: any = {};
-      try { data = JSON.parse(text); } catch { throw new Error("Error de conexion. Intenta de nuevo."); }
+      const data = await readApiResponse(res);
       if (res.ok && data.success) {
         const usersRes = await fetch("/api/users");
         const usersData = await usersRes.json();
@@ -640,9 +677,7 @@ export default function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(courseToUpdate)
       });
-      const text = await res.text();
-      let data: any = {};
-      try { data = JSON.parse(text); } catch { throw new Error("Error de conexion. Intenta de nuevo."); }
+      const data = await readApiResponse(res);
       if (res.ok && data.success) {
         const coursesRes = await fetch("/api/courses");
         const coursesData = await coursesRes.json();
@@ -658,11 +693,11 @@ export default function AdminDashboard() {
         setIsEditModalOpen(false);
         setEditingCourseSlug(null);
       } else {
-        alert("Error al actualizar el curso: " + (data.error || "No se pudieron guardar los cambios."));
+        alert("Error al actualizar el curso: " + (typeof data.error === "string" ? data.error : "No se pudieron guardar los cambios."));
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error updating course:", err);
-      alert("Error al guardar cambios: " + (err?.message || "Ocurrió un error inesperado."));
+      alert("Error al guardar cambios: " + (err instanceof Error ? err.message : "Ocurrió un error inesperado."));
     }
   };
 

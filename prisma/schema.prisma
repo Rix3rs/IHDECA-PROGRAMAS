@@ -108,7 +108,7 @@ model Pago {
   courseTitle           String
   userEmail             String
   userName              String
-  stripePaymentIntentId String?
+  stripePaymentIntentId String?   @unique
   createdAt             DateTime @default(now())
 }
 
@@ -153,4 +153,3 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 }
-

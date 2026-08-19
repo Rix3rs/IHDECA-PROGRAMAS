@@ -1,6 +1,12 @@
 import { SignJWT, jwtVerify } from "jose";
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || "ihdeca-secret-key-change-me");
+function getSecret() {
+  const value = process.env.JWT_SECRET;
+  if (!value || value.length < 32) {
+    throw new Error("JWT_SECRET debe estar configurado con al menos 32 caracteres");
+  }
+  return new TextEncoder().encode(value);
+}
 const expiresIn = "24h";
 
 export interface JWTPayload {
@@ -14,12 +20,12 @@ export async function signJWT(payload: JWTPayload) {
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime(expiresIn)
-    .sign(secret);
+    .sign(getSecret());
 }
 
 export async function verifyJWT(token: string): Promise<JWTPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret());
     return payload as unknown as JWTPayload;
   } catch {
     return null;

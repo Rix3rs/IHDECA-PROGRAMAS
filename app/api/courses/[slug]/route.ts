@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireSession } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function PUT(request: Request, context: { params: Promise<{ slug: string }> }) {
+  const auth = await requireSession(["ADMIN", "TEACHER"]);
+  if (auth.error) return auth.error;
   try {
     const { slug } = await context.params;
+    if (auth.session.rol === "TEACHER") {
+      const assignment = await prisma.userCourse.findUnique({
+        where: { userId_courseSlug: { userId: auth.session.id, courseSlug: slug } }
+      });
+      if (!assignment) return NextResponse.json({ error: "No tienes acceso a este curso" }, { status: 403 });
+    }
     const body = await request.json();
     const {
       title,
@@ -29,7 +38,7 @@ export async function PUT(request: Request, context: { params: Promise<{ slug: s
     } = body;
 
     // Handle Teacher Assignment using comma-separated slugs on User
-    if (instructor !== undefined) {
+    if (instructor !== undefined && auth.session.rol === "ADMIN") {
       if (instructor && instructor !== "Por confirmar") {
         // Find teacher users matching name
         const teacherUsers = await prisma.user.findMany({
@@ -79,28 +88,29 @@ export async function PUT(request: Request, context: { params: Promise<{ slug: s
     }
 
     const updateData: any = {};
-    if (title !== undefined) updateData.title = title;
-    if (description !== undefined) updateData.description = description;
-    if (extendedDescription !== undefined) updateData.extendedDescription = extendedDescription;
-    if (category !== undefined) updateData.category = category;
-    if (categorySlug !== undefined) updateData.categorySlug = categorySlug;
-    if (duration !== undefined) updateData.duration = duration;
-    if (lessons !== undefined) updateData.lessons = lessons;
-    if (price !== undefined) updateData.price = price;
-    if (precioMxn !== undefined) {
+    const isAdmin = auth.session.rol === "ADMIN";
+    if (isAdmin && title !== undefined) updateData.title = title;
+    if (isAdmin && description !== undefined) updateData.description = description;
+    if (isAdmin && extendedDescription !== undefined) updateData.extendedDescription = extendedDescription;
+    if (isAdmin && category !== undefined) updateData.category = category;
+    if (isAdmin && categorySlug !== undefined) updateData.categorySlug = categorySlug;
+    if (isAdmin && duration !== undefined) updateData.duration = duration;
+    if (isAdmin && lessons !== undefined) updateData.lessons = lessons;
+    if (isAdmin && price !== undefined) updateData.price = price;
+    if (isAdmin && precioMxn !== undefined) {
       const num = precioMxn === "" || precioMxn === null ? null : Number(precioMxn);
       updateData.precioMxn = num;
       if (num != null) {
         updateData.price = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", minimumFractionDigits: 0 }).format(num);
       }
     }
-    if (modalidad !== undefined) updateData.modalidad = modalidad;
-    if (instructor !== undefined) updateData.instructor = instructor;
-    if (coverUrl !== undefined) updateData.coverUrl = coverUrl;
-    if (coverPositionY !== undefined) updateData.coverPositionY = coverPositionY;
-    if (coverAlt !== undefined) updateData.coverAlt = coverAlt;
+    if (isAdmin && modalidad !== undefined) updateData.modalidad = modalidad;
+    if (isAdmin && instructor !== undefined) updateData.instructor = instructor;
+    if (isAdmin && coverUrl !== undefined) updateData.coverUrl = coverUrl;
+    if (isAdmin && coverPositionY !== undefined) updateData.coverPositionY = coverPositionY;
+    if (isAdmin && coverAlt !== undefined) updateData.coverAlt = coverAlt;
     if (fechas !== undefined) updateData.fechas = fechas;
-    if (publicado !== undefined) updateData.publicado = publicado;
+    if (isAdmin && publicado !== undefined) updateData.publicado = publicado;
     if (objetivos !== undefined) updateData.objetivos = Array.isArray(objetivos) ? objetivos.join("\n") : objetivos;
     if (dirigidoA !== undefined) updateData.dirigidoA = Array.isArray(dirigidoA) ? dirigidoA.join("\n") : dirigidoA;
 
@@ -118,6 +128,8 @@ export async function PUT(request: Request, context: { params: Promise<{ slug: s
 }
 
 export async function DELETE(request: Request, context: { params: Promise<{ slug: string }> }) {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const { slug } = await context.params;
     await prisma.course.delete({

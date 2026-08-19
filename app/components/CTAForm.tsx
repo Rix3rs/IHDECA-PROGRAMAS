@@ -47,12 +47,12 @@ export default function CTAForm() {
       .catch(err => console.error("Error loading courses in CTAForm:", err));
   }, []);
 
-  const generateCaptcha = () => {
+  function generateCaptcha() {
     const num1 = Math.floor(Math.random() * 9) + 1;
     const num2 = Math.floor(Math.random() * 9) + 1;
     setCaptcha({ num1, num2, sum: num1 + num2 });
     setForm(prev => ({ ...prev, captchaAnswer: "" }));
-  };
+  }
 
   useGSAP(() => {
     const tl = gsap.timeline({

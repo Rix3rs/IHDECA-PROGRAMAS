@@ -18,26 +18,22 @@ interface SidebarProps {
   onCloseMobile?: () => void;
 }
 
+const ROLE_LABELS = {
+  admin: "Administrador",
+  docente: "Docente",
+  estudiante: "Estudiante"
+} as const;
+
+const ROLE_ICONS = {
+  admin: Shield,
+  docente: Users,
+  estudiante: User
+} as const;
+
 export default function Sidebar({ role, activeView, onViewChange, userName, userEmail, mobileOpen, onCloseMobile }: SidebarProps) {
   const router = useRouter();
 
-  const getRoleLabel = () => {
-    switch (role) {
-      case "admin": return "Administrador";
-      case "docente": return "Docente";
-      case "estudiante": return "Estudiante";
-    }
-  };
-
-  const getRoleIcon = () => {
-    switch (role) {
-      case "admin": return Shield;
-      case "docente": return Users;
-      case "estudiante": return User;
-    }
-  };
-
-  const RoleIcon = getRoleIcon();
+  const RoleIcon = ROLE_ICONS[role];
 
   const menuItems = {
     admin: [
@@ -80,7 +76,7 @@ export default function Sidebar({ role, activeView, onViewChange, userName, user
             <span className="text-xs font-bold truncate text-white">{userName}</span>
             <span className="text-[10px] text-slate-300 truncate font-medium">{userEmail}</span>
             <span className="inline-flex self-start items-center gap-1 mt-1.5 px-2 py-0.5 rounded bg-white/10 border border-white/10 text-[8px] font-bold text-accent uppercase tracking-wider">
-              <RoleIcon className="w-2.5 h-2.5" />{getRoleLabel()}
+              <RoleIcon className="w-2.5 h-2.5" />{ROLE_LABELS[role]}
             </span>
           </div>
         </div>

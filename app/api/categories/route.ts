@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireSession } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const body = await request.json();
     const { name, description, iconName, color, textColor, borderColor, imageUrl } = body;
@@ -70,6 +73,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const body = await request.json();
     const { slug, name, description, iconName, color, textColor, borderColor, imageUrl } = body;
@@ -100,6 +105,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const auth = await requireSession(["ADMIN"]);
+  if (auth.error) return auth.error;
   try {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug");

@@ -216,10 +216,6 @@ export default function DocenteDashboard() {
 
     const userToUpdate = {
       id: selectedStudentId,
-      nombre: student.nombre,
-      email: student.email,
-      contrasena: student.contrasena,
-      rol: "STUDENT",
       calificacion: calculatedAvgGrade,
       comentariosDocente: serializedComments,
       progreso: calculatedProgress
@@ -259,10 +255,6 @@ export default function DocenteDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: activeTeacher.id,
-          nombre: activeTeacher.nombre,
-          email: activeTeacher.email,
-          contrasena: activeTeacher.contrasena,
-          rol: "TEACHER",
           zoomLink: zoomLink
         })
       });

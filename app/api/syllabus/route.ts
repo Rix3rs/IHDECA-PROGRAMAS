@@ -1,15 +1,24 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireSession } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const auth = await requireSession(["ADMIN", "TEACHER"]);
+  if (auth.error) return auth.error;
   try {
     const body = await request.json();
     const { courseSlug, contenido } = body;
 
     if (!courseSlug || !contenido) {
       return NextResponse.json({ error: "courseSlug y contenido requeridos" }, { status: 400 });
+    }
+    if (auth.session.rol === "TEACHER") {
+      const assignment = await prisma.userCourse.findUnique({
+        where: { userId_courseSlug: { userId: auth.session.id, courseSlug } }
+      });
+      if (!assignment) return NextResponse.json({ error: "No tienes acceso a este curso" }, { status: 403 });
     }
 
     const course = await prisma.course.findUnique({ where: { slug: courseSlug } });
@@ -32,9 +41,17 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const auth = await requireSession(["ADMIN", "TEACHER"]);
+  if (auth.error) return auth.error;
   try {
     const body = await request.json();
     const { courseSlug, contenido } = body;
+    if (auth.session.rol === "TEACHER") {
+      const assignment = await prisma.userCourse.findUnique({
+        where: { userId_courseSlug: { userId: auth.session.id, courseSlug } }
+      });
+      if (!assignment) return NextResponse.json({ error: "No tienes acceso a este curso" }, { status: 403 });
+    }
 
     const record = await prisma.syllabusModule.findFirst({
       where: { courseSlug, contenido }
