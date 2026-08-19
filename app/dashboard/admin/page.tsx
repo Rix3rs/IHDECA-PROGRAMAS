@@ -1049,6 +1049,32 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Duración total</label>
+                          <input
+                            type="text"
+                            placeholder="Ej. 8 horas"
+                            value={newCourse.duration}
+                            onChange={(e) => setNewCourse({ ...newCourse, duration: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-accent text-xs text-slate-800"
+                          />
+                          <p className="text-[10px] text-slate-400">Tiempo total del curso, por ejemplo: 8 horas o 4 semanas.</p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Lecciones o módulos</label>
+                          <input
+                            type="text"
+                            placeholder="Ej. 6 módulos"
+                            value={newCourse.lessons}
+                            onChange={(e) => setNewCourse({ ...newCourse, lessons: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-accent text-xs text-slate-800"
+                          />
+                          <p className="text-[10px] text-slate-400">Cantidad de sesiones, lecciones o módulos impartidos.</p>
+                        </div>
+                      </div>
+
                       {/* Cover Upload, Alt Tag and Position Adjustments */}
                       <div className="border-t border-slate-100 pt-4 space-y-4 font-sans text-xs">
                         <div className="space-y-1">
@@ -1262,6 +1288,32 @@ export default function AdminDashboard() {
                             onChange={(e) => setEditCourseForm({ ...editCourseForm, precioMxn: e.target.value })}
                             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-accent text-xs text-slate-800"
                           />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Duración total</label>
+                          <input
+                            type="text"
+                            placeholder="Ej. 8 horas"
+                            value={editCourseForm.duration}
+                            onChange={(e) => setEditCourseForm({ ...editCourseForm, duration: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-accent text-xs text-slate-800"
+                          />
+                          <p className="text-[10px] text-slate-400">Tiempo total del curso, por ejemplo: 8 horas o 4 semanas.</p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Lecciones o módulos</label>
+                          <input
+                            type="text"
+                            placeholder="Ej. 6 módulos"
+                            value={editCourseForm.lessons}
+                            onChange={(e) => setEditCourseForm({ ...editCourseForm, lessons: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-accent text-xs text-slate-800"
+                          />
+                          <p className="text-[10px] text-slate-400">Cantidad de sesiones, lecciones o módulos impartidos.</p>
                         </div>
                       </div>
 
